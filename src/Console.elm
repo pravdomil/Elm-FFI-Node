@@ -16,6 +16,13 @@ log a =
         (Json.Decode.succeed a)
 
 
+logError : String -> Task.Task JavaScript.Error String
+logError a =
+    JavaScript.run "console.error(a)"
+        (Json.Encode.string a)
+        (Json.Decode.succeed a)
+
+
 time : String -> Task.Task JavaScript.Error ()
 time a =
     JavaScript.run "console.time(a)"
