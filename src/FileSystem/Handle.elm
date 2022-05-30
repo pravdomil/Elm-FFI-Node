@@ -67,9 +67,9 @@ close (Handle a) =
 
 type alias Mode =
     { type_ : ModeType
-    , create : Bool
-    , truncate : Bool
-    , append : Bool
+    , create : Creation
+    , truncate : Truncation
+    , append : Append
     }
 
 
@@ -77,6 +77,21 @@ type ModeType
     = Read
     | Write
     | ReadAndWrite
+
+
+type Creation
+    = CreateIfNotExists
+    | DoNotCreate
+
+
+type Truncation
+    = TruncateBeforeOpen
+    | DoNotTruncate
+
+
+type Append
+    = Append
+    | DoNotAppend
 
 
 modeToInt : Mode -> Int
@@ -91,21 +106,24 @@ modeToInt a =
         ReadAndWrite ->
             2
     )
-        |> (if a.append then
-                Bitwise.or 8
+        |> (case a.append of
+                Append ->
+                    Bitwise.or 8
 
-            else
-                identity
+                DoNotAppend ->
+                    identity
            )
-        |> (if a.create then
-                Bitwise.or 512
+        |> (case a.create of
+                CreateIfNotExists ->
+                    Bitwise.or 512
 
-            else
-                identity
+                DoNotCreate ->
+                    identity
            )
-        |> (if a.truncate then
-                Bitwise.or 1024
+        |> (case a.truncate of
+                TruncateBeforeOpen ->
+                    Bitwise.or 1024
 
-            else
-                identity
+                DoNotTruncate ->
+                    identity
            )
