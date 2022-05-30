@@ -2,7 +2,6 @@ module FileSystem.Handle exposing (..)
 
 import Bitwise
 import FileSystem
-import FileSystem.Handle
 import JavaScript
 import Json.Decode
 import Json.Encode
