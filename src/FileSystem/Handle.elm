@@ -35,7 +35,7 @@ read (Handle a) =
 write : String -> Handle -> Task.Task JavaScript.Error Handle
 write data (Handle a) =
     JavaScript.run
-        "(() => { var b = Buffer.from(a.data); return a.handle.write(b).then(c => b.length === c.bytesWritten ? undefined : Promise.reject('Write failed call ferror().')); })()"
+        "a.handle.writeFile(a.data)"
         (Json.Encode.object
             [ ( "handle", a )
             , ( "data", Json.Encode.string data )
