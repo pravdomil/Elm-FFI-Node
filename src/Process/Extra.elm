@@ -12,3 +12,12 @@ exit code =
         "process.exit(a)"
         (Json.Encode.int code)
         (Json.Decode.succeed ())
+
+
+onExit : msg -> Cmd msg
+onExit msg =
+    JavaScript.run
+        "new Promise(resolve => {process.once('SIGINT', resolve);process.once('SIGTERM', resolve)})"
+        Json.Encode.null
+        (Json.Decode.succeed ())
+        |> Task.attempt (\_ -> msg)
