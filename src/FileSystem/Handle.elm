@@ -27,7 +27,7 @@ open mode (FileSystem.Path a) =
 read : Handle -> Task.Task JavaScript.Error String
 read (Handle a) =
     JavaScript.run
-        "a.read()"
+        "a.readFile({ encoding: 'utf8' })"
         a
         Json.Decode.string
 
