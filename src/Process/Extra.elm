@@ -17,7 +17,7 @@ exit code =
 onExit : msg -> Cmd msg
 onExit msg =
     JavaScript.run
-        "new Promise(resolve => {process.once('SIGINT', resolve);process.once('SIGTERM', resolve)})"
+        "new Promise(resolve => { process.once('SIGINT', resolve); process.once('SIGTERM', resolve) })"
         Json.Encode.null
         (Json.Decode.succeed ())
         |> Task.attempt (\_ -> msg)
