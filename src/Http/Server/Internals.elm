@@ -42,12 +42,15 @@ create options =
     JavaScript.run """
     (() => {
         var b = require('http').createServer()
-        var c = require('formidable')()
         b.on('error', e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
         b.on('request', (req, res) => {
-          c.parse(req, (e, fields, files) => {
-            scope.ports.httpServerInternals.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
-          })
+          import('formidable')
+            .then(c => {
+              c.default().parse(req, (e, fields, files) => {
+                scope.ports.httpServerInternals.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
+               })
+             })
+            .catch(e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
           res.on('error', e => { scope.ports.httpServerInternals.send({ $: 2, a: e }) })
         })
         b.listen(a)
@@ -88,8 +91,8 @@ onMsg toMsg =
                 |> Json.Decode.decodeValue
                     (Json.Decode.field "$" Json.Decode.int
                         |> Json.Decode.andThen
-                            (\v ->
-                                case v of
+                            (\tag ->
+                                case tag of
                                     0 ->
                                         Json.Decode.map ServerError
                                             (Json.Decode.field "a" Json.Decode.value
@@ -122,15 +125,24 @@ onMsg toMsg =
                                             (Json.Decode.map3 (\v1 v2 v3 -> GotRequest (Request v1 v2 v3))
                                                 (Json.Decode.field "req" Json.Decode.value)
                                                 (Json.Decode.field "res" Json.Decode.value)
-                                                (Json.Decode.map2 Dict.union
+                                                (Json.Decode.map2
+                                                    (\fields files ->
+                                                        Dict.merge
+                                                            (\k v acc -> Dict.insert k v acc)
+                                                            (\k v v2 acc -> Dict.insert k (v ++ v2) acc)
+                                                            (\k v acc -> Dict.insert k v acc)
+                                                            fields
+                                                            files
+                                                            Dict.empty
+                                                    )
                                                     (Json.Decode.field "fields"
                                                         (Json.Decode.dict
-                                                            (Json.Decode.string |> Json.Decode.map StringPart)
+                                                            (Json.Decode.list (Json.Decode.string |> Json.Decode.map StringPart))
                                                         )
                                                     )
                                                     (Json.Decode.field "files"
                                                         (Json.Decode.dict
-                                                            (fileDecoder |> Json.Decode.map FilePart)
+                                                            (Json.Decode.list (fileDecoder |> Json.Decode.map FilePart))
                                                         )
                                                     )
                                                 )
@@ -194,7 +206,7 @@ listenOptionsCodec =
 {-| <https://nodejs.org/api/http.html#class-httpincomingmessage>
 -}
 type Request
-    = Request Json.Decode.Value Json.Decode.Value (Dict.Dict String Part)
+    = Request Json.Decode.Value Json.Decode.Value (Dict.Dict String (List Part))
 
 
 requestMethod : Request -> String
@@ -211,7 +223,7 @@ requestUrl (Request a _ _) =
         |> Result.withDefault ""
 
 
-requestParts : Request -> Dict.Dict String Part
+requestParts : Request -> Dict.Dict String (List Part)
 requestParts (Request _ _ a) =
     a
 
