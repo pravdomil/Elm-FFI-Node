@@ -21,3 +21,12 @@ onExit msg =
         Json.Encode.null
         (Json.Decode.succeed ())
         |> Task.attempt (\_ -> msg)
+
+
+onBeforeExit : msg -> Cmd msg
+onBeforeExit msg =
+    JavaScript.run
+        "new Promise(resolve => { process.once('beforeExit', resolve) })"
+        Json.Encode.null
+        (Json.Decode.succeed ())
+        |> Task.attempt (\_ -> msg)
