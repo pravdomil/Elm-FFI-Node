@@ -59,7 +59,7 @@ init config () =
     , Cmd.batch
         [ cmd |> Cmd.map GotServerMsg
         , cmd2 |> Cmd.map GotMemoryImageMsg
-        , Process.Extra.onExit ProcessExit
+        , Process.Extra.onExitSignal ProcessExit
         ]
     )
 

@@ -14,8 +14,8 @@ exit code =
         (Json.Decode.succeed ())
 
 
-onExit : msg -> Cmd msg
-onExit msg =
+onExitSignal : msg -> Cmd msg
+onExitSignal msg =
     JavaScript.run
         "new Promise(resolve => { process.once('SIGINT', resolve); process.once('SIGTERM', resolve) })"
         Json.Encode.null
