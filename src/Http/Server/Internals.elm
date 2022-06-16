@@ -261,13 +261,63 @@ type alias Response =
 
 
 respond : Response -> Request -> Task.Task JavaScript.Error ()
-respond response (Request _ res _) =
-    JavaScript.run "new Promise((resolve, reject) => { a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
-        (Json.Encode.object
-            [ ( "res", res )
-            , ( "a", response.statusCode |> Json.Encode.int )
-            , ( "b", response.headers |> List.foldl (\( v1, v2 ) acc -> v1 :: v2 :: acc) [] |> Json.Encode.list Json.Encode.string )
-            , ( "c", response.data |> Json.Encode.string )
-            ]
-        )
-        (Json.Decode.succeed ())
+respond response (Request _ res parts) =
+    let
+        files : List FileSystem.Path
+        files =
+            parts
+                |> Dict.toList
+                |> List.concatMap
+                    (\( _, v ) ->
+                        v
+                            |> List.filterMap
+                                (\v2 ->
+                                    case v2 of
+                                        StringPart _ ->
+                                            Nothing
+
+                                        FilePart v3 ->
+                                            Just v3.path
+                                )
+                    )
+
+        respond_ : Task.Task JavaScript.Error ()
+        respond_ =
+            JavaScript.run "new Promise((resolve, reject) => { a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
+                (Json.Encode.object
+                    [ ( "res", res )
+                    , ( "a", response.statusCode |> Json.Encode.int )
+                    , ( "b", response.headers |> List.foldl (\( v1, v2 ) acc -> v1 :: v2 :: acc) [] |> Json.Encode.list Json.Encode.string )
+                    , ( "c", response.data |> Json.Encode.string )
+                    ]
+                )
+                (Json.Decode.succeed ())
+
+        deleteFiles : Task.Task x ()
+        deleteFiles =
+            files
+                |> List.map
+                    (\v ->
+                        v
+                            |> FileSystem.delete
+                            |> Task.onError (\_ -> Task.succeed ())
+                    )
+                |> Task.sequence
+                |> Task.map (\_ -> ())
+    in
+    respond_
+        |> Task.map Ok
+        |> Task.onError (Err >> Task.succeed)
+        |> Task.andThen
+            (\v ->
+                deleteFiles
+                    |> Task.andThen
+                        (\_ ->
+                            case v of
+                                Ok v2 ->
+                                    Task.succeed v2
+
+                                Err v2 ->
+                                    Task.fail v2
+                        )
+            )

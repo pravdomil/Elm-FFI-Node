@@ -47,3 +47,11 @@ append (Path a) data =
             ]
         )
         (Json.Decode.succeed ())
+
+
+delete : Path -> Task.Task JavaScript.Error ()
+delete (Path a) =
+    JavaScript.run
+        "require('fs/promises').unlink(a)"
+        (Json.Encode.string a)
+        (Json.Decode.succeed ())
