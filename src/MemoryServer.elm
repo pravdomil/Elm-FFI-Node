@@ -59,7 +59,7 @@ init config () =
     , Cmd.batch
         [ cmd |> Cmd.map GotServerMsg
         , cmd2 |> Cmd.map GotMemoryImageMsg
-        , Process.Extra.onExitSignal ProcessExit
+        , Process.Extra.onExitSignal ExitSignal
         ]
     )
 
@@ -71,7 +71,7 @@ init config () =
 type Msg msg
     = GotServerMsg Http.Server.Msg
     | GotMemoryImageMsg (MemoryImage.FileSystem.Msg msg)
-    | ProcessExit
+    | ExitSignal
     | NoOperation
 
 
@@ -96,7 +96,7 @@ update config msg model =
             MemoryImage.FileSystem.update config.image config.init config.update b model.image
                 |> Tuple.mapBoth (\v -> { model | image = v }) (Cmd.map GotMemoryImageMsg)
 
-        ProcessExit ->
+        ExitSignal ->
             ( model
             , Cmd.batch
                 [ Http.Server.close
