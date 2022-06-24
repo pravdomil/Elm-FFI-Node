@@ -255,7 +255,7 @@ type alias File =
 
 type alias Response =
     { statusCode : Int
-    , headers : List ( String, String )
+    , headers : Dict.Dict String (List String)
     , data : String
     }
 
@@ -287,7 +287,7 @@ respond response (Request _ res parts) =
                 (Json.Encode.object
                     [ ( "res", res )
                     , ( "a", response.statusCode |> Json.Encode.int )
-                    , ( "b", response.headers |> List.foldl (\( v1, v2 ) acc -> v1 :: v2 :: acc) [] |> Json.Encode.list Json.Encode.string )
+                    , ( "b", response.headers |> Dict.toList |> List.concatMap (\( k, v ) -> v |> List.map (\v_ -> [ k, v_ ])) |> List.concat |> Json.Encode.list Json.Encode.string )
                     , ( "c", response.data |> Json.Encode.string )
                     ]
                 )
