@@ -2,8 +2,8 @@ port module Http.Server.Internals exposing
     ( Server, create, close
     , ListenOptions, emptyListenOptions
     , Msg(..), onMsg
-    , Request, Part(..), File
-    , Response, respond
+    , Request, RequestResource, Part(..), File, requestCodec, partCodec, fileCodec
+    , Response, respond, responseCodec
     )
 
 {-|
@@ -14,9 +14,9 @@ port module Http.Server.Internals exposing
 
 @docs Msg, onMsg
 
-@docs Request, Part, File
+@docs Request, RequestResource, Part, File, requestCodec, partCodec, fileCodec
 
-@docs Response, respond
+@docs Response, respond, responseCodec
 
 -}
 
@@ -310,6 +310,15 @@ type alias Response =
     , headers : Dict.Dict String (List String)
     , data : String
     }
+
+
+responseCodec : Codec.Codec Response
+responseCodec =
+    Codec.object Response
+        |> Codec.field "statusCode" .statusCode Codec.int
+        |> Codec.field "headers" .headers (Codec.dict (Codec.list Codec.string))
+        |> Codec.field "data" .data Codec.string
+        |> Codec.buildObject
 
 
 respond : Response -> Request -> Task.Task JavaScript.Error ()
