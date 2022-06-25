@@ -36,7 +36,7 @@ close =
 
 
 type alias Model =
-    { options : Http.Server.Internals.ListenOptions
+    { options : Http.Server.Internals.Options
     , server : ServerState
     , status : Status
     }
@@ -52,7 +52,7 @@ type ServerState
 --
 
 
-init : Http.Server.Internals.ListenOptions -> ( Server, Cmd Msg )
+init : Http.Server.Internals.Options -> ( Server, Cmd Msg )
 init options =
     Server (Model options NoServer Running) |> lifecycle
 

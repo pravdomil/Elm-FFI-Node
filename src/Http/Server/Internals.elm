@@ -1,6 +1,6 @@
 port module Http.Server.Internals exposing
     ( Server, create, close
-    , ListenOptions, emptyListenOptions, listenOptionsCodec
+    , Options, emptyOptions, optionsCodec
     , Msg(..), onMsg
     , Request, RequestResource, Part(..), File, requestCodec, partCodec, fileCodec
     , Response, respond, responseCodec
@@ -10,7 +10,7 @@ port module Http.Server.Internals exposing
 
 @docs Server, create, close
 
-@docs ListenOptions, emptyListenOptions, listenOptionsCodec
+@docs Options, emptyOptions, optionsCodec
 
 @docs Msg, onMsg
 
@@ -37,7 +37,7 @@ type Server
 
 {-| <https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener>
 -}
-create : ListenOptions -> Task.Task JavaScript.Error Server
+create : Options -> Task.Task JavaScript.Error Server
 create options =
     JavaScript.run """
     import('formidable')
@@ -54,7 +54,7 @@ create options =
         return b
       })
     """
-        (options |> Codec.encodeToValue listenOptionsCodec)
+        (options |> Codec.encodeToValue optionsCodec)
         (Json.Decode.value |> Json.Decode.map Server)
 
 
@@ -186,7 +186,9 @@ onMsg toMsg =
 --
 
 
-type alias ListenOptions =
+{-| <https://nodejs.org/api/net.html#serverlistenoptions-callback>
+-}
+type alias Options =
     { port_ : Maybe Int
     , host : Maybe String
     , path : Maybe String
@@ -198,14 +200,14 @@ type alias ListenOptions =
     }
 
 
-emptyListenOptions : ListenOptions
-emptyListenOptions =
-    ListenOptions Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+emptyOptions : Options
+emptyOptions =
+    Options Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 
-listenOptionsCodec : Codec.Codec ListenOptions
-listenOptionsCodec =
-    Codec.object ListenOptions
+optionsCodec : Codec.Codec Options
+optionsCodec =
+    Codec.object Options
         |> Codec.maybeField "port" .port_ Codec.int
         |> Codec.maybeField "host" .host Codec.string
         |> Codec.maybeField "path" .path Codec.string
