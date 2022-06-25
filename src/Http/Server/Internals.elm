@@ -98,7 +98,11 @@ onMsg toMsg =
                     (Json.Decode.field "res" Json.Decode.value)
                     |> Json.Decode.map Just
                 )
-                (Json.Decode.at [ "req", "socket", "remoteAddress" ] Json.Decode.string)
+                (Json.Decode.oneOf
+                    [ Json.Decode.at [ "req", "socket", "remoteAddress" ] Json.Decode.string |> Json.Decode.map Just
+                    , Json.Decode.succeed Nothing
+                    ]
+                )
                 (Json.Decode.at [ "req", "method" ] Json.Decode.string)
                 (Json.Decode.at [ "req", "url" ] Json.Decode.string)
                 (let
@@ -227,7 +231,7 @@ optionsCodec =
 -}
 type alias Request =
     { resource : Maybe RequestResource
-    , ip : String
+    , ip : Maybe String
     , method : String
     , url : String
     , headers : Dict.Dict String (List String)
@@ -239,7 +243,7 @@ requestCodec : Codec.Codec Request
 requestCodec =
     Codec.object Request
         |> Codec.field "resource" .resource (Codec.succeed Nothing)
-        |> Codec.field "ip" .ip Codec.string
+        |> Codec.field "ip" .ip (Codec.maybe Codec.string)
         |> Codec.field "method" .method Codec.string
         |> Codec.field "url" .url Codec.string
         |> Codec.field "headers" .headers (Codec.dict (Codec.list Codec.string))
