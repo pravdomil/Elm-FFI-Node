@@ -40,22 +40,20 @@ type Server
 create : ListenOptions -> Task.Task JavaScript.Error Server
 create options =
     JavaScript.run """
-    (() => {
+    import('formidable')
+      .then(c => {
         var b = require('http').createServer()
         b.on('error', e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
         b.on('request', (req, res) => {
-          import('formidable')
-            .then(c => {
-              c.default().parse(req, (e, fields, files) => {
-                scope.ports.httpServerInternals.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
-               })
-             })
-            .catch(e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
           res.on('error', e => { scope.ports.httpServerInternals.send({ $: 2, a: e }) })
+          c.default().parse(req, (e, fields, files) => {
+            scope.ports.httpServerInternals.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
+          })
+          .catch(e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
         })
         b.listen(a)
         return b
-    })()
+      })
     """
         (options |> Codec.encodeToValue listenOptionsCodec)
         (Json.Decode.value |> Json.Decode.map Server)
