@@ -2,7 +2,7 @@ port module Http.Server.Internals exposing
     ( Server, create, close
     , ListenOptions, emptyListenOptions
     , Msg(..), onMsg
-    , Request, requestMethod, requestUrl, requestParts, Part(..), File
+    , Request, Part(..), File
     , Response, respond
     )
 
@@ -14,7 +14,7 @@ port module Http.Server.Internals exposing
 
 @docs Msg, onMsg
 
-@docs Request, requestMethod, requestUrl, requestParts, Part, File
+@docs Request, Part, File
 
 @docs Response, respond
 
@@ -85,6 +85,60 @@ type Msg
 onMsg : (Msg -> msg) -> Sub msg
 onMsg toMsg =
     let
+        fileDecoder : Json.Decode.Decoder File
+        fileDecoder =
+            Json.Decode.map4 File
+                (Json.Decode.field "filepath" (Json.Decode.string |> Json.Decode.map FileSystem.Path))
+                (Json.Decode.field "originalFilename" Json.Decode.string)
+                (Json.Decode.field "mimetype" Json.Decode.string)
+                (Json.Decode.field "size" Json.Decode.int)
+
+        requestDecoder : Json.Decode.Decoder Request
+        requestDecoder =
+            Json.Decode.map6 Request
+                (Json.Decode.map2 RequestResource
+                    (Json.Decode.field "req" Json.Decode.value)
+                    (Json.Decode.field "res" Json.Decode.value)
+                    |> Json.Decode.map Just
+                )
+                (Json.Decode.at [ "req", "socket", "remoteAddress" ] Json.Decode.string)
+                (Json.Decode.at [ "req", "method" ] Json.Decode.string)
+                (Json.Decode.at [ "req", "url" ] Json.Decode.string)
+                (let
+                    fn : List String -> Dict.Dict String (List String) -> Dict.Dict String (List String)
+                    fn c acc =
+                        case c of
+                            first :: second :: rest ->
+                                fn rest (Dict.update first (\x -> x |> Maybe.withDefault [] |> (::) second |> Just) acc)
+
+                            _ ->
+                                acc
+                 in
+                 Json.Decode.at [ "req", "rawHeaders" ] (Json.Decode.list Json.Decode.string)
+                    |> Json.Decode.map (\x -> fn x Dict.empty)
+                )
+                (Json.Decode.map2
+                    (\fields files ->
+                        Dict.merge
+                            (\k v acc -> Dict.insert k v acc)
+                            (\k v v2 acc -> Dict.insert k (v ++ v2) acc)
+                            (\k v acc -> Dict.insert k v acc)
+                            fields
+                            files
+                            Dict.empty
+                    )
+                    (Json.Decode.field "fields"
+                        (Json.Decode.dict
+                            (Json.Decode.list (Json.Decode.string |> Json.Decode.map StringPart))
+                        )
+                    )
+                    (Json.Decode.field "files"
+                        (Json.Decode.dict
+                            (Json.Decode.list (fileDecoder |> Json.Decode.map FilePart))
+                        )
+                    )
+                )
+
         toEvent : Json.Decode.Value -> Msg
         toEvent b =
             b
@@ -112,41 +166,8 @@ onMsg toMsg =
                                             )
 
                                     3 ->
-                                        let
-                                            fileDecoder : Json.Decode.Decoder File
-                                            fileDecoder =
-                                                Json.Decode.map4 File
-                                                    (Json.Decode.field "filepath" (Json.Decode.string |> Json.Decode.map FileSystem.Path))
-                                                    (Json.Decode.field "originalFilename" Json.Decode.string)
-                                                    (Json.Decode.field "mimetype" Json.Decode.string)
-                                                    (Json.Decode.field "size" Json.Decode.int)
-                                        in
-                                        Json.Decode.field "a"
-                                            (Json.Decode.map3 (\v1 v2 v3 -> GotRequest (Request v1 v2 v3))
-                                                (Json.Decode.field "req" Json.Decode.value)
-                                                (Json.Decode.field "res" Json.Decode.value)
-                                                (Json.Decode.map2
-                                                    (\fields files ->
-                                                        Dict.merge
-                                                            (\k v acc -> Dict.insert k v acc)
-                                                            (\k v v2 acc -> Dict.insert k (v ++ v2) acc)
-                                                            (\k v acc -> Dict.insert k v acc)
-                                                            fields
-                                                            files
-                                                            Dict.empty
-                                                    )
-                                                    (Json.Decode.field "fields"
-                                                        (Json.Decode.dict
-                                                            (Json.Decode.list (Json.Decode.string |> Json.Decode.map StringPart))
-                                                        )
-                                                    )
-                                                    (Json.Decode.field "files"
-                                                        (Json.Decode.dict
-                                                            (Json.Decode.list (fileDecoder |> Json.Decode.map FilePart))
-                                                        )
-                                                    )
-                                                )
-                                            )
+                                        Json.Decode.map GotRequest
+                                            (Json.Decode.field "a" requestDecoder)
 
                                     _ ->
                                         Json.Decode.fail "Cannot decode message."
@@ -205,27 +226,34 @@ listenOptionsCodec =
 
 {-| <https://nodejs.org/api/http.html#class-httpincomingmessage>
 -}
-type Request
-    = Request Json.Decode.Value Json.Decode.Value (Dict.Dict String (List Part))
+type alias Request =
+    { resource : Maybe RequestResource
+    , ip : String
+    , method : String
+    , url : String
+    , headers : Dict.Dict String (List String)
+    , parts : Dict.Dict String (List Part)
+    }
 
 
-requestMethod : Request -> String
-requestMethod (Request a _ _) =
-    a
-        |> Json.Decode.decodeValue (Json.Decode.field "method" Json.Decode.string)
-        |> Result.withDefault ""
+requestCodec : Codec.Codec Request
+requestCodec =
+    Codec.object Request
+        |> Codec.field "resource" .resource (Codec.succeed Nothing)
+        |> Codec.field "ip" .ip Codec.string
+        |> Codec.field "method" .method Codec.string
+        |> Codec.field "url" .url Codec.string
+        |> Codec.field "headers" .headers (Codec.dict (Codec.list Codec.string))
+        |> Codec.field "parts" .parts (Codec.dict (Codec.list partCodec))
+        |> Codec.buildObject
 
 
-requestUrl : Request -> String
-requestUrl (Request a _ _) =
-    a
-        |> Json.Decode.decodeValue (Json.Decode.field "url" Json.Decode.string)
-        |> Result.withDefault ""
+
+--
 
 
-requestParts : Request -> Dict.Dict String (List Part)
-requestParts (Request _ _ a) =
-    a
+type RequestResource
+    = RequestResource Json.Decode.Value Json.Decode.Value
 
 
 
@@ -235,6 +263,22 @@ requestParts (Request _ _ a) =
 type Part
     = StringPart String
     | FilePart File
+
+
+partCodec : Codec.Codec Part
+partCodec =
+    Codec.custom
+        (\fn1 fn2 x ->
+            case x of
+                StringPart x1 ->
+                    fn1 x1
+
+                FilePart x1 ->
+                    fn2 x1
+        )
+        |> Codec.variant1 "StringPart" StringPart Codec.string
+        |> Codec.variant1 "FilePart" FilePart fileCodec
+        |> Codec.buildCustom
 
 
 
@@ -249,6 +293,16 @@ type alias File =
     }
 
 
+fileCodec : Codec.Codec File
+fileCodec =
+    Codec.object File
+        |> Codec.field "path" .path (Codec.string |> Codec.map FileSystem.Path (\(FileSystem.Path x) -> x))
+        |> Codec.field "name" .name Codec.string
+        |> Codec.field "mime" .mime Codec.string
+        |> Codec.field "size" .size Codec.int
+        |> Codec.buildObject
+
+
 
 --
 
@@ -261,11 +315,11 @@ type alias Response =
 
 
 respond : Response -> Request -> Task.Task JavaScript.Error ()
-respond response (Request _ res parts) =
+respond response request =
     let
         files : List FileSystem.Path
         files =
-            parts
+            request.parts
                 |> Dict.toList
                 |> List.concatMap
                     (\( _, v ) ->
@@ -283,15 +337,20 @@ respond response (Request _ res parts) =
 
         respond_ : Task.Task JavaScript.Error ()
         respond_ =
-            JavaScript.run "new Promise((resolve, reject) => { a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
-                (Json.Encode.object
-                    [ ( "res", res )
-                    , ( "a", response.statusCode |> Json.Encode.int )
-                    , ( "b", response.headers |> Dict.toList |> List.concatMap (\( k, v ) -> v |> List.map (\v_ -> [ k, v_ ])) |> List.concat |> Json.Encode.list Json.Encode.string )
-                    , ( "c", response.data |> Json.Encode.string )
-                    ]
-                )
-                (Json.Decode.succeed ())
+            case request.resource of
+                Just b ->
+                    JavaScript.run "new Promise((resolve, reject) => { a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
+                        (Json.Encode.object
+                            [ ( "res", (\(RequestResource _ x) -> x) b )
+                            , ( "a", response.statusCode |> Json.Encode.int )
+                            , ( "b", response.headers |> Dict.toList |> List.concatMap (\( k, v ) -> v |> List.map (\v_ -> [ k, v_ ])) |> List.concat |> Json.Encode.list Json.Encode.string )
+                            , ( "c", response.data |> Json.Encode.string )
+                            ]
+                        )
+                        (Json.Decode.succeed ())
+
+                Nothing ->
+                    Task.succeed ()
 
         deleteFiles : Task.Task x ()
         deleteFiles =
