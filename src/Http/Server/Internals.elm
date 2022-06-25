@@ -49,7 +49,6 @@ create options =
           c.default().parse(req, (e, fields, files) => {
             scope.ports.httpServerInternals.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
           })
-          .catch(e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
         })
         b.listen(a)
         return b
