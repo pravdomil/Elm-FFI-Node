@@ -14,9 +14,10 @@ module Http.Server exposing
 
 -}
 
+import Console
 import Http.Server.Internals
 import JavaScript
-import LogMessage
+import Json.Encode
 import Process.Extra
 import Task
 
@@ -88,13 +89,13 @@ update msg (Server a) =
             case b of
                 Ok c ->
                     ( Server { a | server = ReadyServer c }
-                    , LogMessage.log LogMessage.Info (LogMessage.Name "Server started.") (LogMessage.Details "") []
+                    , Console.log "Server started."
                         |> Task.attempt (\_ -> NoOperation)
                     )
 
                 Err c ->
                     ( Server a
-                    , LogMessage.log LogMessage.Error (LogMessage.Name "Cannot start server.") (LogMessage.JavaScriptError c) []
+                    , Console.logError ("Cannot start server. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
                         |> Task.attempt (\_ -> NoOperation)
                     )
@@ -103,7 +104,7 @@ update msg (Server a) =
             case b of
                 Http.Server.Internals.ServerError c ->
                     ( Server a
-                    , LogMessage.log LogMessage.Error (LogMessage.Name "Got server error.") (LogMessage.JavaScriptError c) []
+                    , Console.logError ("Got server error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
                         |> Task.attempt (\_ -> NoOperation)
                     )
@@ -115,13 +116,13 @@ update msg (Server a) =
 
                 Http.Server.Internals.RequestError c ->
                     ( Server a
-                    , LogMessage.log LogMessage.Warning (LogMessage.Name "Got request error.") (LogMessage.JavaScriptError c) []
+                    , Console.logError ("Got request error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.attempt (\_ -> NoOperation)
                     )
 
                 Http.Server.Internals.ResponseError c ->
                     ( Server a
-                    , LogMessage.log LogMessage.Warning (LogMessage.Name "Got response error.") (LogMessage.JavaScriptError c) []
+                    , Console.logError ("Got response error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.attempt (\_ -> NoOperation)
                     )
 
