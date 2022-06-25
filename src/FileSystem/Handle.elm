@@ -16,13 +16,16 @@ open : Mode -> FileSystem.Path -> Task.Task JavaScript.Error Handle
 open mode (FileSystem.Path a) =
     JavaScript.run
         """
-        require('fs/promises').open(
-          a.path,
-          (a.mode & 3 ? fs.constants.O_RDWR : ((a.mode & 1 ? fs.constants.O_RDONLY : 0) | (a.mode & 2 ? fs.constants.O_WRONLY : 0))) |
-          (a.mode & 4 ? fs.constants.O_APPEND : 0) |
-          (a.mode & 8 ? fs.constants.O_CREAT : 0) |
-          (a.mode & 16 ? fs.constants.O_TRUNC : 0)
-        )
+        (() => {
+          var c = require('fs').constants
+          return require('fs/promises').open(
+            a.path,
+            (a.mode & 3 ? c.O_RDWR : ((a.mode & 1 ? c.O_RDONLY : 0) | (a.mode & 2 ? c.O_WRONLY : 0))) |
+            (a.mode & 4 ? c.O_APPEND : 0) |
+            (a.mode & 8 ? c.O_CREAT : 0) |
+            (a.mode & 16 ? c.O_TRUNC : 0)
+          )
+        })()
         """
         (Json.Encode.object
             [ ( "path", Json.Encode.string a )
