@@ -109,11 +109,6 @@ update msg (Server a) =
                         |> Task.attempt (\_ -> NoOperation)
                     )
 
-                Http.Server.Internals.GotRequest _ ->
-                    ( Server a
-                    , Cmd.none
-                    )
-
                 Http.Server.Internals.RequestError c ->
                     ( Server a
                     , Console.logError ("Got request error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
@@ -124,6 +119,11 @@ update msg (Server a) =
                     ( Server a
                     , Console.logError ("Got response error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.attempt (\_ -> NoOperation)
+                    )
+
+                Http.Server.Internals.GotRequest _ ->
+                    ( Server a
+                    , Cmd.none
                     )
 
         PleaseClose ->
