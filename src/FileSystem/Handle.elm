@@ -15,7 +15,15 @@ type Handle
 open : Mode -> FileSystem.Path -> Task.Task JavaScript.Error Handle
 open mode (FileSystem.Path a) =
     JavaScript.run
-        "require('fs/promises').open(a.path, a.mode)"
+        """
+        require('fs/promises').open(
+          a.path,
+          (a.mode & 3 ? fs.constants.O_RDWR : ((a.mode & 1 ? fs.constants.O_RDONLY : 0) | (a.mode & 2 ? fs.constants.O_WRONLY : 0))) |
+          (a.mode & 4 ? fs.constants.O_APPEND : 0) |
+          (a.mode & 8 ? fs.constants.O_CREAT : 0) |
+          (a.mode & 16 ? fs.constants.O_TRUNC : 0)
+        )
+        """
         (Json.Encode.object
             [ ( "path", Json.Encode.string a )
             , ( "mode", Json.Encode.int (modeToInt mode) )
@@ -65,17 +73,22 @@ close (Handle a) =
 
 
 type alias Mode =
-    { type_ : ModeType
+    { read : ReadMode
+    , write : WriteMode
     , create : Creation
     , truncate : Truncation
-    , append : Append
     }
 
 
-type ModeType
+type ReadMode
     = Read
-    | Write
-    | ReadAndWrite
+    | NoRead
+
+
+type WriteMode
+    = Write
+    | Append
+    | NoWrite
 
 
 type Creation
@@ -88,40 +101,36 @@ type Truncation
     | DoNotTruncate
 
 
-type Append
-    = Append
-    | DoNotAppend
-
-
 modeToInt : Mode -> Int
 modeToInt a =
-    (case a.type_ of
-        Read ->
-            0
+    0
+        |> (case a.read of
+                Read ->
+                    Bitwise.or 1
 
-        Write ->
-            1
+                NoRead ->
+                    identity
+           )
+        |> (case a.write of
+                Write ->
+                    Bitwise.or 2
 
-        ReadAndWrite ->
-            2
-    )
-        |> (case a.append of
                 Append ->
-                    Bitwise.or 8
+                    Bitwise.or 4
 
-                DoNotAppend ->
+                NoWrite ->
                     identity
            )
         |> (case a.create of
                 CreateIfNotExists ->
-                    Bitwise.or 512
+                    Bitwise.or 8
 
                 DoNotCreate ->
                     identity
            )
         |> (case a.truncate of
                 TruncateBeforeOpen ->
-                    Bitwise.or 1024
+                    Bitwise.or 16
 
                 DoNotTruncate ->
                     identity
