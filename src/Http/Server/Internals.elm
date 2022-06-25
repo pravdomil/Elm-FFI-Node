@@ -1,6 +1,6 @@
 port module Http.Server.Internals exposing
     ( Server, create, close
-    , ListenOptions, emptyListenOptions
+    , ListenOptions, emptyListenOptions, listenOptionsCodec
     , Msg(..), onMsg
     , Request, RequestResource, Part(..), File, requestCodec, partCodec, fileCodec
     , Response, respond, responseCodec
@@ -10,7 +10,7 @@ port module Http.Server.Internals exposing
 
 @docs Server, create, close
 
-@docs ListenOptions, emptyListenOptions
+@docs ListenOptions, emptyListenOptions, listenOptionsCodec
 
 @docs Msg, onMsg
 
