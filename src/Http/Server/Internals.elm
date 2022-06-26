@@ -59,8 +59,19 @@ create options =
             """
                 (options |> Codec.encodeToValue optionsCodec)
                 (Json.Decode.value |> Json.Decode.map Server)
+
+        clearSocket : Task.Task x ()
+        clearSocket =
+            case options.path of
+                Just b ->
+                    FileSystem.delete (FileSystem.Path b)
+                        |> Task.onError (\_ -> Task.succeed ())
+
+                Nothing ->
+                    Task.succeed ()
     in
-    create_
+    clearSocket
+        |> Task.andThen (\() -> create_)
 
 
 close : Server -> Task.Task JavaScript.Error ()
