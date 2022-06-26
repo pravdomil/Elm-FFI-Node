@@ -46,6 +46,7 @@ create options =
             import('formidable')
               .then(c => {
                 var b = require('http').createServer()
+                b.once('listening', () => { if (a.path) require('fs/promises').chmod(a.path, 0o775).then(() => {}, () => {}) })
                 b.on('error', e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
                 b.on('request', (req, res) => {
                   res.on('error', e => { scope.ports.httpServerInternals.send({ $: 2, a: e }) })
