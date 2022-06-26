@@ -110,7 +110,7 @@ onMsg toMsg =
                     fn c acc =
                         case c of
                             first :: second :: rest ->
-                                fn rest (Dict.update first (\x -> x |> Maybe.withDefault [] |> (::) second |> Just) acc)
+                                fn rest (Dict.update (String.toLower first) (\x -> x |> Maybe.withDefault [] |> (::) second |> Just) acc)
 
                             _ ->
                                 acc
