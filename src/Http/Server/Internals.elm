@@ -133,7 +133,7 @@ onMsg toMsg =
                                 acc
                  in
                  Json.Decode.at [ "req", "rawHeaders" ] (Json.Decode.list Json.Decode.string)
-                    |> Json.Decode.map (\x -> fn x Dict.empty)
+                    |> Json.Decode.map (\x -> Dict.empty |> fn x |> Dict.map (always List.reverse))
                 )
                 (Json.Decode.map2
                     (\fields files ->
