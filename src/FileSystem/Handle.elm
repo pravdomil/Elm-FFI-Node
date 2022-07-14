@@ -43,7 +43,7 @@ read (Handle a) =
         Json.Decode.string
 
 
-write : String -> Handle -> Task.Task JavaScript.Error Handle
+write : String -> Handle -> Task.Task JavaScript.Error ()
 write data (Handle a) =
     JavaScript.run
         "a.handle.writeFile(a.data)"
@@ -52,15 +52,15 @@ write data (Handle a) =
             , ( "data", Json.Encode.string data )
             ]
         )
-        (Json.Decode.succeed (Handle a))
+        (Json.Decode.succeed ())
 
 
-truncate : Handle -> Task.Task JavaScript.Error Handle
+truncate : Handle -> Task.Task JavaScript.Error ()
 truncate (Handle a) =
     JavaScript.run
         "a.truncate()"
         a
-        (Json.Decode.succeed (Handle a))
+        (Json.Decode.succeed ())
 
 
 close : Handle -> Task.Task JavaScript.Error ()
