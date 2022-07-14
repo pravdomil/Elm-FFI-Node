@@ -228,7 +228,7 @@ emptyOptions =
 
 optionsCodec : Codec.Codec Options
 optionsCodec =
-    Codec.object Options
+    Codec.record Options
         |> Codec.maybeField "port" .port_ Codec.int
         |> Codec.maybeField "host" .host Codec.string
         |> Codec.maybeField "path" .path Codec.string
@@ -237,7 +237,7 @@ optionsCodec =
         |> Codec.maybeField "readableAll" .readableAll Codec.bool
         |> Codec.maybeField "writableAll" .writableAll Codec.bool
         |> Codec.maybeField "ipv6Only" .ipv6Only Codec.bool
-        |> Codec.buildObject
+        |> Codec.buildRecord
 
 
 
@@ -258,14 +258,14 @@ type alias Request =
 
 requestCodec : Codec.Codec Request
 requestCodec =
-    Codec.object Request
+    Codec.record Request
         |> Codec.field "resource" .resource (Codec.succeed Nothing)
         |> Codec.field "ip" .ip (Codec.maybe Codec.string)
         |> Codec.field "method" .method Codec.string
         |> Codec.field "url" .url Codec.string
-        |> Codec.field "headers" .headers (Codec.dict (Codec.list Codec.string))
-        |> Codec.field "parts" .parts (Codec.dict (Codec.list partCodec))
-        |> Codec.buildObject
+        |> Codec.field "headers" .headers (Codec.dict Codec.string (Codec.list Codec.string))
+        |> Codec.field "parts" .parts (Codec.dict Codec.string (Codec.list partCodec))
+        |> Codec.buildRecord
 
 
 
@@ -315,12 +315,12 @@ type alias File =
 
 fileCodec : Codec.Codec File
 fileCodec =
-    Codec.object File
-        |> Codec.field "path" .path (Codec.string |> Codec.map FileSystem.Path (\(FileSystem.Path x) -> x))
+    Codec.record File
+        |> Codec.field "path" .path (Codec.string |> Codec.map (\(FileSystem.Path x) -> x) FileSystem.Path)
         |> Codec.field "name" .name Codec.string
         |> Codec.field "mime" .mime Codec.string
         |> Codec.field "size" .size Codec.int
-        |> Codec.buildObject
+        |> Codec.buildRecord
 
 
 
@@ -336,11 +336,11 @@ type alias Response =
 
 responseCodec : Codec.Codec Response
 responseCodec =
-    Codec.object Response
+    Codec.record Response
         |> Codec.field "statusCode" .statusCode Codec.int
-        |> Codec.field "headers" .headers (Codec.dict (Codec.list Codec.string))
+        |> Codec.field "headers" .headers (Codec.dict Codec.string (Codec.list Codec.string))
         |> Codec.field "data" .data Codec.string
-        |> Codec.buildObject
+        |> Codec.buildRecord
 
 
 respond : Response -> Request -> Task.Task JavaScript.Error ()
