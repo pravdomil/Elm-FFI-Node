@@ -43,8 +43,8 @@ read (Handle a) =
         Json.Decode.string
 
 
-write : Handle -> String -> Task.Task JavaScript.Error ()
-write (Handle a) data =
+write : String -> Handle -> Task.Task JavaScript.Error ()
+write data (Handle a) =
     JavaScript.run
         "a.handle.writeFile(a.data)"
         (Json.Encode.object
