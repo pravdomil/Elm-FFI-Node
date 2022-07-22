@@ -1,6 +1,6 @@
 port module Http.Server.Internals exposing
     ( Server, create, close
-    , Options, emptyOptions, encodeOptions
+    , Options, emptyOptions, encodeOptions, optionsDecoder
     , Msg(..), onMsg
     , Request, RequestResource, Part(..), File, requestCodec, partCodec, fileCodec
     , Response, respond, responseCodec
@@ -10,7 +10,7 @@ port module Http.Server.Internals exposing
 
 @docs Server, create, close
 
-@docs Options, emptyOptions, encodeOptions
+@docs Options, emptyOptions, encodeOptions, optionsDecoder
 
 @docs Msg, onMsg
 
@@ -239,6 +239,37 @@ encodeOptions a =
     ]
         |> List.filterMap identity
         |> Json.Encode.object
+
+
+optionsDecoder : Json.Decode.Decoder Options
+optionsDecoder =
+    let
+        maybeField : String -> Json.Decode.Decoder a -> Json.Decode.Decoder (Maybe a)
+        maybeField name decoder =
+            Json.Decode.oneOf
+                [ Json.Decode.field name Json.Decode.value |> Json.Decode.map Just
+                , Json.Decode.succeed Nothing
+                ]
+                |> Json.Decode.andThen
+                    (\x ->
+                        case x of
+                            Just _ ->
+                                Json.Decode.field name decoder
+                                    |> Json.Decode.map Just
+
+                            Nothing ->
+                                Json.Decode.succeed Nothing
+                    )
+    in
+    Json.Decode.map8 Options
+        (maybeField "port" Json.Decode.int)
+        (maybeField "host" Json.Decode.string)
+        (maybeField "path" Json.Decode.string)
+        (maybeField "backlog" Json.Decode.int)
+        (maybeField "exclusive" Json.Decode.bool)
+        (maybeField "readableAll" Json.Decode.bool)
+        (maybeField "writableAll" Json.Decode.bool)
+        (maybeField "ipv6Only" Json.Decode.bool)
 
 
 
