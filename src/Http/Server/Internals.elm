@@ -1,6 +1,6 @@
 port module Http.Server.Internals exposing
     ( Server, create, close
-    , Options, emptyOptions, optionsCodec
+    , Options, emptyOptions, encodeOptions
     , Msg(..), onMsg
     , Request, RequestResource, Part(..), File, requestCodec, partCodec, fileCodec
     , Response, respond, responseCodec
@@ -10,7 +10,7 @@ port module Http.Server.Internals exposing
 
 @docs Server, create, close
 
-@docs Options, emptyOptions, optionsCodec
+@docs Options, emptyOptions, encodeOptions
 
 @docs Msg, onMsg
 
@@ -58,7 +58,7 @@ create options =
                 return b
               })
             """
-                (options |> Codec.encodeToValue optionsCodec)
+                (options |> encodeOptions)
                 (Json.Decode.value |> Json.Decode.map Server)
 
         clearSocket : Task.Task x ()
@@ -226,18 +226,19 @@ emptyOptions =
     Options Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 
-optionsCodec : Codec.Codec Options
-optionsCodec =
-    Codec.record Options
-        |> Codec.maybeField "port" .port_ Codec.int
-        |> Codec.maybeField "host" .host Codec.string
-        |> Codec.maybeField "path" .path Codec.string
-        |> Codec.maybeField "backlog" .backlog Codec.int
-        |> Codec.maybeField "exclusive" .exclusive Codec.bool
-        |> Codec.maybeField "readableAll" .readableAll Codec.bool
-        |> Codec.maybeField "writableAll" .writableAll Codec.bool
-        |> Codec.maybeField "ipv6Only" .ipv6Only Codec.bool
-        |> Codec.buildRecord
+encodeOptions : Options -> Json.Encode.Value
+encodeOptions a =
+    [ a.port_ |> Maybe.map (Json.Encode.int >> Tuple.pair "port")
+    , a.host |> Maybe.map (Json.Encode.string >> Tuple.pair "host")
+    , a.path |> Maybe.map (Json.Encode.string >> Tuple.pair "path")
+    , a.backlog |> Maybe.map (Json.Encode.int >> Tuple.pair "backlog")
+    , a.exclusive |> Maybe.map (Json.Encode.bool >> Tuple.pair "exclusive")
+    , a.readableAll |> Maybe.map (Json.Encode.bool >> Tuple.pair "readableAll")
+    , a.writableAll |> Maybe.map (Json.Encode.bool >> Tuple.pair "writableAll")
+    , a.ipv6Only |> Maybe.map (Json.Encode.bool >> Tuple.pair "ipv6Only")
+    ]
+        |> List.filterMap identity
+        |> Json.Encode.object
 
 
 
@@ -259,12 +260,12 @@ type alias Request =
 requestCodec : Codec.Codec Request
 requestCodec =
     Codec.record Request
-        |> Codec.field "resource" .resource (Codec.succeed Nothing)
-        |> Codec.field "ip" .ip (Codec.maybe Codec.string)
-        |> Codec.field "method" .method Codec.string
-        |> Codec.field "url" .url Codec.string
-        |> Codec.field "headers" .headers (Codec.dict Codec.string (Codec.list Codec.string))
-        |> Codec.field "parts" .parts (Codec.dict Codec.string (Codec.list partCodec))
+        |> Codec.field .resource (Codec.succeed Nothing)
+        |> Codec.field .ip (Codec.maybe Codec.string)
+        |> Codec.field .method Codec.string
+        |> Codec.field .url Codec.string
+        |> Codec.field .headers (Codec.dict Codec.string (Codec.list Codec.string))
+        |> Codec.field .parts (Codec.dict Codec.string (Codec.list partCodec))
         |> Codec.buildRecord
 
 
@@ -296,8 +297,8 @@ partCodec =
                 FilePart x1 ->
                     fn2 x1
         )
-        |> Codec.variant1 "StringPart" StringPart Codec.string
-        |> Codec.variant1 "FilePart" FilePart fileCodec
+        |> Codec.variant1 StringPart Codec.string
+        |> Codec.variant1 FilePart fileCodec
         |> Codec.buildCustom
 
 
@@ -316,10 +317,10 @@ type alias File =
 fileCodec : Codec.Codec File
 fileCodec =
     Codec.record File
-        |> Codec.field "path" .path (Codec.string |> Codec.map (\(FileSystem.Path x) -> x) FileSystem.Path)
-        |> Codec.field "name" .name Codec.string
-        |> Codec.field "mime" .mime Codec.string
-        |> Codec.field "size" .size Codec.int
+        |> Codec.field .path (Codec.string |> Codec.map (\(FileSystem.Path x) -> x) FileSystem.Path)
+        |> Codec.field .name Codec.string
+        |> Codec.field .mime Codec.string
+        |> Codec.field .size Codec.int
         |> Codec.buildRecord
 
 
@@ -337,9 +338,9 @@ type alias Response =
 responseCodec : Codec.Codec Response
 responseCodec =
     Codec.record Response
-        |> Codec.field "statusCode" .statusCode Codec.int
-        |> Codec.field "headers" .headers (Codec.dict Codec.string (Codec.list Codec.string))
-        |> Codec.field "data" .data Codec.string
+        |> Codec.field .statusCode Codec.int
+        |> Codec.field .headers (Codec.dict Codec.string (Codec.list Codec.string))
+        |> Codec.field .data Codec.string
         |> Codec.buildRecord
 
 
