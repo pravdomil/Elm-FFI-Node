@@ -49,6 +49,7 @@ create options =
                 b.once('listening', () => { if (a.path) require('fs/promises').chmod(a.path, 0o775).then(() => {}, () => {}) })
                 b.on('error', e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
                 b.on('request', (req, res) => {
+                  res._created = Date.now()
                   res.on('error', e => { scope.ports.httpServerInternals.send({ $: 2, a: e }) })
                   c.default().parse(req, (e, fields, files) => {
                     scope.ports.httpServerInternals.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
@@ -400,7 +401,7 @@ respond response request =
         respond_ =
             case request.resource of
                 Just b ->
-                    JavaScript.run "new Promise((resolve, reject) => { a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
+                    JavaScript.run "new Promise((resolve, reject) => { a.b.push('Server-Timing', 'Elm;dur=' + (Date.now() - a.res._created)); a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
                         (Json.Encode.object
                             [ ( "res", (\(RequestResource _ x) -> x) b )
                             , ( "a", response.statusCode |> Json.Encode.int )
