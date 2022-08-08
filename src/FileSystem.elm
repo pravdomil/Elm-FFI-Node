@@ -49,6 +49,18 @@ append (Path a) data =
         (Json.Decode.succeed ())
 
 
+rename : Path -> Path -> Task.Task JavaScript.Error ()
+rename (Path from) (Path to) =
+    JavaScript.run
+        "require('fs/promises').rename(a.a, a.b)"
+        (Json.Encode.object
+            [ ( "a", Json.Encode.string from )
+            , ( "b", Json.Encode.string to )
+            ]
+        )
+        (Json.Decode.succeed ())
+
+
 delete : Path -> Task.Task JavaScript.Error ()
 delete (Path a) =
     JavaScript.run
