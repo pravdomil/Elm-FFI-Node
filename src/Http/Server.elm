@@ -159,8 +159,8 @@ onMsg toMsg =
                     )
                 )
 
-        toEvent : Json.Decode.Value -> Msg
-        toEvent b =
+        toMsg_ : Json.Decode.Value -> Msg
+        toMsg_ b =
             b
                 |> Json.Decode.decodeValue
                     (Json.Decode.field "$" Json.Decode.int
@@ -202,7 +202,7 @@ onMsg toMsg =
                                 ServerError (JavaScript.DecodeError v2)
                    )
     in
-    httpServer (toEvent >> toMsg)
+    httpServer (toMsg_ >> toMsg)
 
 
 
