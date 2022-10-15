@@ -66,7 +66,7 @@ type Msg
     = GotServer (Result JavaScript.Error Http.Server.Internals.Server)
     | GotEvent Http.Server.Internals.Msg
     | PleaseClose
-    | NoOperation
+    | NothingHappened
 
 
 type PublicMsg
@@ -91,14 +91,14 @@ update msg (Server a) =
                 Ok c ->
                     ( Server { a | server = ReadyServer c }
                     , Console.log "Server started."
-                        |> Task.attempt (\_ -> NoOperation)
+                        |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Err c ->
                     ( Server a
                     , Console.logError ("Cannot start server. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
-                        |> Task.attempt (\_ -> NoOperation)
+                        |> Task.attempt (\_ -> NothingHappened)
                     )
 
         GotEvent b ->
@@ -107,19 +107,19 @@ update msg (Server a) =
                     ( Server a
                     , Console.logError ("Got server error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
-                        |> Task.attempt (\_ -> NoOperation)
+                        |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.RequestError c ->
                     ( Server a
                     , Console.logError ("Got request error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
-                        |> Task.attempt (\_ -> NoOperation)
+                        |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.ResponseError c ->
                     ( Server a
                     , Console.logError ("Got response error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
-                        |> Task.attempt (\_ -> NoOperation)
+                        |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.RequestReceived _ ->
@@ -130,7 +130,7 @@ update msg (Server a) =
             , Cmd.none
             )
 
-        NoOperation ->
+        NothingHappened ->
             Platform.Extra.noOperation (Server a)
     )
         |> (\( v, cmd ) ->
@@ -171,7 +171,7 @@ lifecycle (Server a) =
                 ReadyServer b ->
                     ( Server { a | server = NoServer }
                     , Http.Server.Internals.close b
-                        |> Task.attempt (\_ -> NoOperation)
+                        |> Task.attempt (\_ -> NothingHappened)
                     )
 
 
