@@ -1,4 +1,4 @@
-port module Http.Server.Internals exposing
+port module Http.Server exposing
     ( Server, create, close
     , Options, emptyOptions, encodeOptions, optionsDecoder
     , Msg(..), onMsg
@@ -47,12 +47,12 @@ create options =
               .then(c => {
                 var b = require('http').createServer()
                 b.once('listening', () => { if (a.path) require('fs/promises').chmod(a.path, 0o775).then(() => {}, () => {}) })
-                b.on('error', e => { scope.ports.httpServerInternals.send({ $: 0, a: e }) })
+                b.on('error', e => { scope.ports.httpServer.send({ $: 0, a: e }) })
                 b.on('request', (req, res) => {
                   res._created = Date.now()
-                  res.on('error', e => { scope.ports.httpServerInternals.send({ $: 2, a: e }) })
+                  res.on('error', e => { scope.ports.httpServer.send({ $: 2, a: e }) })
                   c.default().parse(req, (e, fields, files) => {
-                    scope.ports.httpServerInternals.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
+                    scope.ports.httpServer.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
                   })
                 })
                 b.listen(a)
@@ -87,7 +87,7 @@ close (Server a) =
 --
 
 
-port httpServerInternals : (Json.Decode.Value -> msg) -> Sub msg
+port httpServer : (Json.Decode.Value -> msg) -> Sub msg
 
 
 type Msg
@@ -201,7 +201,7 @@ onMsg toMsg =
                                 ServerError (JavaScript.DecodeError v2)
                    )
     in
-    httpServerInternals (toEvent >> toMsg)
+    httpServer (toEvent >> toMsg)
 
 
 
