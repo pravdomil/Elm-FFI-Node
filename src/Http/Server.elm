@@ -63,10 +63,10 @@ init options =
 
 
 type Msg
-    = GotServer (Result JavaScript.Error Http.Server.Internals.Server)
+    = NothingHappened
+    | GotServer (Result JavaScript.Error Http.Server.Internals.Server)
     | GotEvent Http.Server.Internals.Msg
     | PleaseClose
-    | NothingHappened
 
 
 type PublicMsg
@@ -86,6 +86,9 @@ toPublicMsg a =
 update : Msg -> Server -> ( Server, Cmd Msg )
 update msg (Server a) =
     (case msg of
+        NothingHappened ->
+            Platform.Extra.noOperation (Server a)
+
         GotServer b ->
             case b of
                 Ok c ->
@@ -129,9 +132,6 @@ update msg (Server a) =
             ( Server { a | state = Exiting }
             , Cmd.none
             )
-
-        NothingHappened ->
-            Platform.Extra.noOperation (Server a)
     )
         |> (\( v, cmd ) ->
                 let
