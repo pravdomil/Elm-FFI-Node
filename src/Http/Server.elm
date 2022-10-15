@@ -87,18 +87,18 @@ update : Msg -> Server -> ( Server, Cmd Msg )
 update msg (Server model) =
     (case msg of
         NothingHappened ->
-            Platform.Extra.noOperation (Server model)
+            Platform.Extra.noOperation model
 
         ServerReceived b ->
             case b of
                 Ok c ->
-                    ( Server { model | server = ReadyServer c }
+                    ( { model | server = ReadyServer c }
                     , Console.log "Server started."
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Err c ->
-                    ( Server model
+                    ( model
                     , Console.logError ("Cannot start server. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
                         |> Task.attempt (\_ -> NothingHappened)
@@ -107,41 +107,33 @@ update msg (Server model) =
         ServerMessageReceived b ->
             case b of
                 Http.Server.Internals.ServerError c ->
-                    ( Server model
+                    ( model
                     , Console.logError ("Got server error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.RequestError c ->
-                    ( Server model
+                    ( model
                     , Console.logError ("Got request error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.ResponseError c ->
-                    ( Server model
+                    ( model
                     , Console.logError ("Got response error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.RequestReceived _ ->
-                    Platform.Extra.noOperation (Server model)
+                    Platform.Extra.noOperation model
 
         CloseRequested ->
-            ( Server { model | state = Exiting }
+            ( { model | state = Exiting }
             , Cmd.none
             )
     )
-        |> (\( v, cmd ) ->
-                let
-                    ( v2, cmd2 ) =
-                        lifecycle v
-                in
-                ( v2
-                , Cmd.batch [ cmd, cmd2 ]
-                )
-           )
+        |> Tuple.mapFirst Server
 
 
 lifecycle : Server -> ( Server, Cmd Msg )
