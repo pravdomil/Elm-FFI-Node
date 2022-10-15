@@ -16,7 +16,7 @@ module Http.Server.Worker exposing
 
 import Codec
 import Console
-import Http.Server.Internals
+import Http.Server
 import JavaScript
 import LogMessage
 import Platform.Extra
@@ -39,7 +39,7 @@ close a =
 
 
 type alias Model =
-    { server : Result Error Http.Server.Internals.Server
+    { server : Result Error Http.Server.Server
     }
 
 
@@ -58,7 +58,7 @@ type Error
 --
 
 
-init : Http.Server.Internals.Options -> ( Worker, Cmd Msg )
+init : Http.Server.Options -> ( Worker, Cmd Msg )
 init options =
     ( Model
         (Err NoServer)
@@ -74,8 +74,8 @@ init options =
 
 type Msg
     = NothingHappened
-    | ServerCreated (Result JavaScript.Error Http.Server.Internals.Server)
-    | MessageReceived Http.Server.Internals.Msg
+    | ServerCreated (Result JavaScript.Error Http.Server.Server)
+    | MessageReceived Http.Server.Msg
     | CloseRequested
     | ServerClosed (Result JavaScript.Error ())
 
@@ -106,13 +106,13 @@ update msg (Worker model) =
 
 
 type PublicMsg
-    = RequestReceived Http.Server.Internals.Request
+    = RequestReceived Http.Server.Request
 
 
 toPublicMsg : Msg -> Maybe PublicMsg
 toPublicMsg a =
     case a of
-        MessageReceived (Http.Server.Internals.RequestReceived b) ->
+        MessageReceived (Http.Server.RequestReceived b) ->
             Just (RequestReceived b)
 
         _ ->
@@ -123,12 +123,12 @@ toPublicMsg a =
 --
 
 
-createServer : Http.Server.Internals.Options -> Model -> ( Model, Cmd Msg )
+createServer : Http.Server.Options -> Model -> ( Model, Cmd Msg )
 createServer options model =
     case model.server of
         Err NoServer ->
             ( { model | server = Err Loading }
-            , Http.Server.Internals.create options
+            , Http.Server.create options
                 |> Task.attempt ServerCreated
             )
 
@@ -136,7 +136,7 @@ createServer options model =
             Platform.Extra.noOperation model
 
 
-serverCreated : Result JavaScript.Error Http.Server.Internals.Server -> Model -> ( Model, Cmd Msg )
+serverCreated : Result JavaScript.Error Http.Server.Server -> Model -> ( Model, Cmd Msg )
 serverCreated result model =
     case result of
         Ok b ->
@@ -169,10 +169,10 @@ serverCreated result model =
             )
 
 
-messageReceived : Http.Server.Internals.Msg -> Model -> ( Model, Cmd Msg )
+messageReceived : Http.Server.Msg -> Model -> ( Model, Cmd Msg )
 messageReceived msg model =
     case msg of
-        Http.Server.Internals.ServerError b ->
+        Http.Server.ServerError b ->
             let
                 message : LogMessage.LogMessage
                 message =
@@ -187,7 +187,7 @@ messageReceived msg model =
                 |> Task.attempt (\_ -> NothingHappened)
             )
 
-        Http.Server.Internals.RequestError b ->
+        Http.Server.RequestError b ->
             let
                 message : LogMessage.LogMessage
                 message =
@@ -201,7 +201,7 @@ messageReceived msg model =
                 |> Task.attempt (\_ -> NothingHappened)
             )
 
-        Http.Server.Internals.ResponseError b ->
+        Http.Server.ResponseError b ->
             let
                 message : LogMessage.LogMessage
                 message =
@@ -215,7 +215,7 @@ messageReceived msg model =
                 |> Task.attempt (\_ -> NothingHappened)
             )
 
-        Http.Server.Internals.RequestReceived _ ->
+        Http.Server.RequestReceived _ ->
             Platform.Extra.noOperation model
 
 
@@ -224,7 +224,7 @@ closeServer model =
     case model.server of
         Ok b ->
             ( { model | server = Err Closing }
-            , Http.Server.Internals.close b
+            , Http.Server.close b
                 |> Task.attempt ServerClosed
             )
 
@@ -271,7 +271,7 @@ serverClosed result model =
 
 subscriptions : Worker -> Sub Msg
 subscriptions _ =
-    Http.Server.Internals.onMsg MessageReceived
+    Http.Server.onMsg MessageReceived
 
 
 
