@@ -1,12 +1,12 @@
-module Http.Server exposing
-    ( Server, close
+module Http.Server.Worker exposing
+    ( Worker, close
     , Msg, init, update, subscriptions
     , PublicMsg(..), toPublicMsg
     )
 
 {-|
 
-@docs Server, close
+@docs Worker, close
 
 @docs Msg, init, update, subscriptions
 
@@ -25,11 +25,11 @@ import Task
 import Task.Extra
 
 
-type Server
-    = Server Model
+type Worker
+    = Worker Model
 
 
-close : Server -> ( Server, Cmd Msg )
+close : Worker -> ( Worker, Cmd Msg )
 close a =
     update CloseRequested a
 
@@ -58,14 +58,14 @@ type Error
 --
 
 
-init : Http.Server.Internals.Options -> ( Server, Cmd Msg )
+init : Http.Server.Internals.Options -> ( Worker, Cmd Msg )
 init options =
     ( Model
         (Err NoServer)
     , Cmd.none
     )
         |> Platform.Extra.andThen (createServer options)
-        |> Tuple.mapFirst Server
+        |> Tuple.mapFirst Worker
 
 
 
@@ -80,8 +80,8 @@ type Msg
     | ServerClosed (Result JavaScript.Error ())
 
 
-update : Msg -> Server -> ( Server, Cmd Msg )
-update msg (Server model) =
+update : Msg -> Worker -> ( Worker, Cmd Msg )
+update msg (Worker model) =
     (case msg of
         NothingHappened ->
             Platform.Extra.noOperation model
@@ -98,7 +98,7 @@ update msg (Server model) =
         ServerClosed b ->
             serverClosed b model
     )
-        |> Tuple.mapFirst Server
+        |> Tuple.mapFirst Worker
 
 
 
@@ -269,7 +269,7 @@ serverClosed result model =
 --
 
 
-subscriptions : Server -> Sub Msg
+subscriptions : Worker -> Sub Msg
 subscriptions _ =
     Http.Server.Internals.onMsg MessageReceived
 
