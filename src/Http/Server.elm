@@ -38,7 +38,7 @@ close =
 type alias Model =
     { options : Http.Server.Internals.Options
     , server : ServerState
-    , status : Status
+    , state : State
     }
 
 
@@ -127,7 +127,7 @@ update msg (Server a) =
                     )
 
         PleaseClose ->
-            ( Server { a | status = Exiting }
+            ( Server { a | state = Exiting }
             , Cmd.none
             )
 
@@ -149,7 +149,7 @@ update msg (Server a) =
 
 lifecycle : Server -> ( Server, Cmd Msg )
 lifecycle (Server a) =
-    case a.status of
+    case a.state of
         Running ->
             case a.server of
                 NoServer ->
@@ -199,7 +199,7 @@ subscriptions _ =
 --
 
 
-type Status
+type State
     = Running
     | Exiting
 
