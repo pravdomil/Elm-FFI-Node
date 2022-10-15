@@ -18,6 +18,7 @@ import Console
 import Http.Server.Internals
 import JavaScript
 import Json.Encode
+import Platform.Extra
 import Process.Extra
 import Task
 
@@ -122,9 +123,7 @@ update msg (Server a) =
                     )
 
                 Http.Server.Internals.RequestReceived _ ->
-                    ( Server a
-                    , Cmd.none
-                    )
+                    Platform.Extra.noOperation (Server a)
 
         PleaseClose ->
             ( Server { a | state = Exiting }
@@ -132,9 +131,7 @@ update msg (Server a) =
             )
 
         NoOperation ->
-            ( Server a
-            , Cmd.none
-            )
+            Platform.Extra.noOperation (Server a)
     )
         |> (\( v, cmd ) ->
                 let
@@ -158,26 +155,18 @@ lifecycle (Server a) =
                     )
 
                 LoadingServer ->
-                    ( Server a
-                    , Cmd.none
-                    )
+                    Platform.Extra.noOperation (Server a)
 
                 ReadyServer _ ->
-                    ( Server a
-                    , Cmd.none
-                    )
+                    Platform.Extra.noOperation (Server a)
 
         Exiting ->
             case a.server of
                 NoServer ->
-                    ( Server a
-                    , Cmd.none
-                    )
+                    Platform.Extra.noOperation (Server a)
 
                 LoadingServer ->
-                    ( Server a
-                    , Cmd.none
-                    )
+                    Platform.Extra.noOperation (Server a)
 
                 ReadyServer b ->
                     ( Server { a | server = NoServer }
