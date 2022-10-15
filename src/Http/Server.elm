@@ -193,13 +193,13 @@ onMsg toMsg =
                                         Json.Decode.fail "Cannot decode message."
                             )
                     )
-                |> (\v ->
-                        case v of
-                            Ok v2 ->
-                                v2
+                |> (\x ->
+                        case x of
+                            Ok x2 ->
+                                x2
 
-                            Err v2 ->
-                                ServerError (JavaScript.DecodeError v2)
+                            Err x2 ->
+                                ServerError (JavaScript.DecodeError x2)
                    )
     in
     httpServer (toMsg_ >> toMsg)
@@ -385,16 +385,16 @@ respond response request =
             request.parts
                 |> Dict.toList
                 |> List.concatMap
-                    (\( _, v ) ->
-                        v
+                    (\( _, x ) ->
+                        x
                             |> List.filterMap
-                                (\v2 ->
-                                    case v2 of
+                                (\x2 ->
+                                    case x2 of
                                         StringPart _ ->
                                             Nothing
 
-                                        FilePart v3 ->
-                                            Just v3.path
+                                        FilePart x3 ->
+                                            Just x3.path
                                 )
                     )
 
@@ -419,8 +419,8 @@ respond response request =
         deleteFiles =
             files
                 |> List.map
-                    (\v ->
-                        v
+                    (\x ->
+                        x
                             |> FileSystem.delete
                             |> Task.onError (\_ -> Task.succeed ())
                     )
@@ -431,15 +431,15 @@ respond response request =
         |> Task.map Ok
         |> Task.onError (Err >> Task.succeed)
         |> Task.andThen
-            (\v ->
+            (\x ->
                 deleteFiles
                     |> Task.andThen
                         (\_ ->
-                            case v of
-                                Ok v2 ->
-                                    Task.succeed v2
+                            case x of
+                                Ok x2 ->
+                                    Task.succeed x2
 
-                                Err v2 ->
-                                    Task.fail v2
+                                Err x2 ->
+                                    Task.fail x2
                         )
             )
