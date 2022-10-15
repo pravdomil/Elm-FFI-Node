@@ -260,7 +260,6 @@ serverClosed result model =
             in
             ( { model | server = Err (JavaScriptError b) }
             , logMessage message
-                |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.exit 1)
                 |> Task.attempt (\_ -> NothingHappened)
             )
 
