@@ -49,6 +49,7 @@ create options =
                 b.once('listening', () => { if (a.path) require('fs/promises').chmod(a.path, 0o775).then(() => {}, () => {}) })
                 b.on('error', e => { scope.ports.httpServer.send({ $: 0, a: e }) })
                 b.on('request', (req, res) => {
+                  req.on('error', e => { scope.ports.httpServer.send({ $: 1, a: e }) })
                   res._created = Date.now()
                   res.on('error', e => { scope.ports.httpServer.send({ $: 2, a: e }) })
                   c.default().parse(req, (e, fields, files) => {
