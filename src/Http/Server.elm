@@ -29,7 +29,7 @@ type Server
 
 close : Cmd Msg
 close =
-    sendMessageToSelf PleaseClose
+    sendMessageToSelf CloseRequested
 
 
 
@@ -64,9 +64,9 @@ init options =
 
 type Msg
     = NothingHappened
-    | GotServer (Result JavaScript.Error Http.Server.Internals.Server)
-    | GotEvent Http.Server.Internals.Msg
-    | PleaseClose
+    | ServerReceived (Result JavaScript.Error Http.Server.Internals.Server)
+    | ServerMessageReceived Http.Server.Internals.Msg
+    | CloseRequested
 
 
 type PublicMsg
@@ -76,7 +76,7 @@ type PublicMsg
 toPublicMsg : Msg -> Maybe PublicMsg
 toPublicMsg a =
     case a of
-        GotEvent (Http.Server.Internals.RequestReceived b) ->
+        ServerMessageReceived (Http.Server.Internals.RequestReceived b) ->
             Just (GotRequest b)
 
         _ ->
@@ -89,7 +89,7 @@ update msg (Server model) =
         NothingHappened ->
             Platform.Extra.noOperation (Server model)
 
-        GotServer b ->
+        ServerReceived b ->
             case b of
                 Ok c ->
                     ( Server { model | server = ReadyServer c }
@@ -104,7 +104,7 @@ update msg (Server model) =
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
-        GotEvent b ->
+        ServerMessageReceived b ->
             case b of
                 Http.Server.Internals.ServerError c ->
                     ( Server model
@@ -128,7 +128,7 @@ update msg (Server model) =
                 Http.Server.Internals.RequestReceived _ ->
                     Platform.Extra.noOperation (Server model)
 
-        PleaseClose ->
+        CloseRequested ->
             ( Server { model | state = Exiting }
             , Cmd.none
             )
@@ -151,7 +151,7 @@ lifecycle (Server model) =
             case model.server of
                 NoServer ->
                     ( Server { model | server = LoadingServer }
-                    , Http.Server.Internals.create model.options |> Task.attempt GotServer
+                    , Http.Server.Internals.create model.options |> Task.attempt ServerReceived
                     )
 
                 LoadingServer ->
@@ -181,7 +181,7 @@ lifecycle (Server model) =
 
 subscriptions : Server -> Sub Msg
 subscriptions _ =
-    Http.Server.Internals.onMsg GotEvent
+    Http.Server.Internals.onMsg ServerMessageReceived
 
 
 
