@@ -50,8 +50,8 @@ create options =
                 b.on('error', e => { scope.ports.httpServer.send({ $: 0, a: e }) })
                 b.on('request', (req, res) => {
                   req.on('error', e => { scope.ports.httpServer.send({ $: 1, a: e }) })
-                  res._created = Date.now()
                   res.on('error', e => { scope.ports.httpServer.send({ $: 2, a: e }) })
+                  res._created = Date.now()
                   c.default().parse(req, (e, fields, files) => {
                     scope.ports.httpServer.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
                   })
