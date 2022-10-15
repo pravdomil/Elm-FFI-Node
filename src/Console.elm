@@ -63,17 +63,17 @@ timeTask toError label a =
             (\_ ->
                 a
                     |> taskAndThenWithResult
-                        (\v ->
+                        (\x ->
                             timeEnd label
                                 |> Task.mapError toError
                                 |> Task.andThen
                                     (\_ ->
-                                        case v of
-                                            Ok v2 ->
-                                                Task.succeed v2
+                                        case x of
+                                            Ok x2 ->
+                                                Task.succeed x2
 
-                                            Err v2 ->
-                                                Task.fail v2
+                                            Err x2 ->
+                                                Task.fail x2
                                     )
                         )
             )
