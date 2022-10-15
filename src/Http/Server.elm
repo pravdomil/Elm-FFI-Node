@@ -75,7 +75,7 @@ type PublicMsg
 toPublicMsg : Msg -> Maybe PublicMsg
 toPublicMsg a =
     case a of
-        GotEvent (Http.Server.Internals.GotRequest b) ->
+        GotEvent (Http.Server.Internals.RequestReceived b) ->
             Just (GotRequest b)
 
         _ ->
@@ -121,7 +121,7 @@ update msg (Server a) =
                         |> Task.attempt (\_ -> NoOperation)
                     )
 
-                Http.Server.Internals.GotRequest _ ->
+                Http.Server.Internals.RequestReceived _ ->
                     ( Server a
                     , Cmd.none
                     )

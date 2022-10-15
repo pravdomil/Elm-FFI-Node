@@ -94,7 +94,7 @@ type Msg
     = ServerError JavaScript.Error
     | RequestError JavaScript.Error
     | ResponseError JavaScript.Error
-    | GotRequest Request
+    | RequestReceived Request
 
 
 onMsg : (Msg -> msg) -> Sub msg
@@ -185,7 +185,7 @@ onMsg toMsg =
                                             )
 
                                     3 ->
-                                        Json.Decode.map GotRequest
+                                        Json.Decode.map RequestReceived
                                             (Json.Decode.field "a" requestDecoder)
 
                                     _ ->
