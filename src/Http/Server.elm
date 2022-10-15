@@ -84,21 +84,21 @@ toPublicMsg a =
 
 
 update : Msg -> Server -> ( Server, Cmd Msg )
-update msg (Server a) =
+update msg (Server model) =
     (case msg of
         NothingHappened ->
-            Platform.Extra.noOperation (Server a)
+            Platform.Extra.noOperation (Server model)
 
         GotServer b ->
             case b of
                 Ok c ->
-                    ( Server { a | server = ReadyServer c }
+                    ( Server { model | server = ReadyServer c }
                     , Console.log "Server started."
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Err c ->
-                    ( Server a
+                    ( Server model
                     , Console.logError ("Cannot start server. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
                         |> Task.attempt (\_ -> NothingHappened)
@@ -107,29 +107,29 @@ update msg (Server a) =
         GotEvent b ->
             case b of
                 Http.Server.Internals.ServerError c ->
-                    ( Server a
+                    ( Server model
                     , Console.logError ("Got server error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.andThen (\_ -> Process.Extra.exit 1)
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.RequestError c ->
-                    ( Server a
+                    ( Server model
                     , Console.logError ("Got request error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.ResponseError c ->
-                    ( Server a
+                    ( Server model
                     , Console.logError ("Got response error. " ++ Json.Encode.encode 0 (Json.Encode.string (JavaScript.errorToString c)))
                         |> Task.attempt (\_ -> NothingHappened)
                     )
 
                 Http.Server.Internals.RequestReceived _ ->
-                    Platform.Extra.noOperation (Server a)
+                    Platform.Extra.noOperation (Server model)
 
         PleaseClose ->
-            ( Server { a | state = Exiting }
+            ( Server { model | state = Exiting }
             , Cmd.none
             )
     )
@@ -145,31 +145,31 @@ update msg (Server a) =
 
 
 lifecycle : Server -> ( Server, Cmd Msg )
-lifecycle (Server a) =
-    case a.state of
+lifecycle (Server model) =
+    case model.state of
         Running ->
-            case a.server of
+            case model.server of
                 NoServer ->
-                    ( Server { a | server = LoadingServer }
-                    , Http.Server.Internals.create a.options |> Task.attempt GotServer
+                    ( Server { model | server = LoadingServer }
+                    , Http.Server.Internals.create model.options |> Task.attempt GotServer
                     )
 
                 LoadingServer ->
-                    Platform.Extra.noOperation (Server a)
+                    Platform.Extra.noOperation (Server model)
 
                 ReadyServer _ ->
-                    Platform.Extra.noOperation (Server a)
+                    Platform.Extra.noOperation (Server model)
 
         Exiting ->
-            case a.server of
+            case model.server of
                 NoServer ->
-                    Platform.Extra.noOperation (Server a)
+                    Platform.Extra.noOperation (Server model)
 
                 LoadingServer ->
-                    Platform.Extra.noOperation (Server a)
+                    Platform.Extra.noOperation (Server model)
 
                 ReadyServer b ->
-                    ( Server { a | server = NoServer }
+                    ( Server { model | server = NoServer }
                     , Http.Server.Internals.close b
                         |> Task.attempt (\_ -> NothingHappened)
                     )
