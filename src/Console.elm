@@ -37,6 +37,10 @@ logError a =
         (Json.Decode.succeed ())
 
 
+
+--
+
+
 time : String -> Task.Task JavaScript.Error ()
 time a =
     JavaScript.run "console.time(a)"
