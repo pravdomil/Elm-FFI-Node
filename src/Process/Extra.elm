@@ -6,8 +6,8 @@ import Json.Encode
 import Task
 
 
-exit : Int -> Task.Task JavaScript.Error ()
-exit code =
+hardExit : Int -> Task.Task JavaScript.Error ()
+hardExit code =
     JavaScript.run
         "process.exit(a)"
         (Json.Encode.int code)
