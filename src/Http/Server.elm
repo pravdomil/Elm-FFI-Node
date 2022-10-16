@@ -67,7 +67,7 @@ create options =
         clearSocket =
             case options.path of
                 Just b ->
-                    FileSystem.delete (FileSystem.Path b)
+                    FileSystem.delete (FileSystem.stringToPath b)
                         |> Task.onError (\_ -> Task.succeed ())
 
                 Nothing ->
@@ -104,7 +104,7 @@ onMsg toMsg =
         fileDecoder : Json.Decode.Decoder File
         fileDecoder =
             Json.Decode.map4 File
-                (Json.Decode.field "filepath" (Json.Decode.string |> Json.Decode.map FileSystem.Path))
+                (Json.Decode.field "filepath" (Json.Decode.string |> Json.Decode.map FileSystem.stringToPath))
                 (Json.Decode.field "originalFilename" Json.Decode.string)
                 (Json.Decode.field "mimetype" Json.Decode.string)
                 (Json.Decode.field "size" Json.Decode.int)
@@ -350,7 +350,7 @@ type alias File =
 fileCodec : Codec.Codec File
 fileCodec =
     Codec.record File
-        |> Codec.field .path (Codec.string |> Codec.map (\(FileSystem.Path x) -> x) FileSystem.Path)
+        |> Codec.field .path (Codec.string |> Codec.map FileSystem.pathToString FileSystem.stringToPath)
         |> Codec.field .name Codec.string
         |> Codec.field .mime Codec.string
         |> Codec.field .size Codec.int
