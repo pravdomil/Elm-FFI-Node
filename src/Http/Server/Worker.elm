@@ -164,7 +164,7 @@ serverCreated result model =
             in
             ( { model | server = Err (JavaScriptError b) }
             , logMessage message
-                |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.exit 1)
+                |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
                 |> Task.attempt (\_ -> NothingHappened)
             )
 
@@ -183,7 +183,7 @@ messageReceived msg model =
             in
             ( model
             , logMessage message
-                |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.exit 1)
+                |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
                 |> Task.attempt (\_ -> NothingHappened)
             )
 
