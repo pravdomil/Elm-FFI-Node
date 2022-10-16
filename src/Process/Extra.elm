@@ -14,6 +14,14 @@ exit code =
         (Json.Decode.succeed ())
 
 
+softExit : Task.Task JavaScript.Error ()
+softExit =
+    JavaScript.run
+        "process.kill(process.pid, 'SIGTERM')"
+        Json.Encode.null
+        (Json.Decode.succeed ())
+
+
 onInterruptAndTerminationSignal : msg -> Cmd msg
 onInterruptAndTerminationSignal msg =
     JavaScript.run
