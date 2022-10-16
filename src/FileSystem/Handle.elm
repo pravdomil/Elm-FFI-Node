@@ -1,4 +1,4 @@
-module FileSystem.Handle exposing (..)
+module FileSystem.Handle exposing (Creation(..), Handle, Mode, ReadMode(..), Truncation(..), WriteMode(..), close, open, read, truncate, write)
 
 import Bitwise
 import FileSystem
@@ -102,6 +102,10 @@ type Creation
 type Truncation
     = TruncateBeforeOpen
     | DoNotTruncate
+
+
+
+--
 
 
 modeToInt : Mode -> Int
