@@ -1,4 +1,4 @@
-module FileSystem exposing (Path, append, delete, pathToString, read, rename, stringToPath, write)
+module FileSystem exposing (Path, append, chmod, delete, pathToString, read, rename, stringToPath, write)
 
 {-| <https://nodejs.org/api/fs.html>
 -}
@@ -54,6 +54,17 @@ append (Path a) data =
         (Json.Encode.object
             [ ( "path", Json.Encode.string a )
             , ( "data", Json.Encode.string data )
+            ]
+        )
+        (Json.Decode.succeed ())
+
+
+chmod : Path -> Int -> Task.Task JavaScript.Error ()
+chmod (Path a) mode =
+    JavaScript.run "require('fs/promises').chmod(a.path, a.mode)"
+        (Json.Encode.object
+            [ ( "path", Json.Encode.string a )
+            , ( "mode", Json.Encode.int mode )
             ]
         )
         (Json.Decode.succeed ())
