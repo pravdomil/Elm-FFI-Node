@@ -178,7 +178,7 @@ messageReceived msg model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Error
-                        "Got server error."
+                        "Server error."
                         (Just (LogMessage.JavaScriptError b))
             in
             ( model
@@ -193,7 +193,7 @@ messageReceived msg model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Warning
-                        "Got request error."
+                        "Request error."
                         (Just (LogMessage.JavaScriptError b))
             in
             ( model
@@ -207,7 +207,7 @@ messageReceived msg model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Warning
-                        "Got response error."
+                        "Response error."
                         (Just (LogMessage.JavaScriptError b))
             in
             ( model
