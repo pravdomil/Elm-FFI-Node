@@ -1,4 +1,4 @@
-module FileSystem exposing (..)
+module FileSystem exposing (Path, append, delete, pathToString, read, rename, stringToPath, write)
 
 {-| <https://nodejs.org/api/fs.html>
 -}
@@ -11,6 +11,16 @@ import Task
 
 type Path
     = Path String
+
+
+stringToPath : String -> Path
+stringToPath =
+    Path
+
+
+pathToString : Path -> String
+pathToString (Path a) =
+    a
 
 
 

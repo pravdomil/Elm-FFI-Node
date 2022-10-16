@@ -13,7 +13,7 @@ type Handle
 
 
 open : Mode -> FileSystem.Path -> Task.Task JavaScript.Error Handle
-open mode (FileSystem.Path a) =
+open mode a =
     JavaScript.run
         """
         (() => {
@@ -28,7 +28,7 @@ open mode (FileSystem.Path a) =
         })()
         """
         (Json.Encode.object
-            [ ( "path", Json.Encode.string a )
+            [ ( "path", Json.Encode.string (FileSystem.pathToString a) )
             , ( "mode", Json.Encode.int (modeToInt mode) )
             ]
         )
