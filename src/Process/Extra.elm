@@ -6,19 +6,19 @@ import Json.Encode
 import Task
 
 
-hardExit : Int -> Task.Task JavaScript.Error ()
-hardExit code =
-    JavaScript.run
-        "process.exit(a)"
-        (Json.Encode.int code)
-        (Json.Decode.succeed ())
-
-
 softExit : Task.Task JavaScript.Error ()
 softExit =
     JavaScript.run
         "process.kill(process.pid, 'SIGTERM')"
         Json.Encode.null
+        (Json.Decode.succeed ())
+
+
+hardExit : Int -> Task.Task JavaScript.Error ()
+hardExit code =
+    JavaScript.run
+        "process.exit(a)"
+        (Json.Encode.int code)
         (Json.Decode.succeed ())
 
 
