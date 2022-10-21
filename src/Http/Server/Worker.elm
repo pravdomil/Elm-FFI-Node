@@ -20,6 +20,7 @@ import Http.Server
 import JavaScript
 import LogMessage
 import Platform.Extra
+import Process
 import Process.Extra
 import Task
 import Task.Extra
@@ -229,8 +230,16 @@ closeServer model =
                 |> Task.attempt ServerClosed
             )
 
-        Err _ ->
-            Platform.Extra.noOperation model
+        Err b ->
+            case b of
+                Loading ->
+                    ( model
+                    , Process.sleep 100
+                        |> Task.perform (\() -> CloseRequested)
+                    )
+
+                _ ->
+                    Platform.Extra.noOperation model
 
 
 serverClosed : Result JavaScript.Error () -> Model -> ( Model, Cmd Msg )
