@@ -51,7 +51,8 @@ type Error
     = NoServer
     | Loading
     | Closing
-    | JavaScriptError JavaScript.Error
+    | CreateError JavaScript.Error
+    | CloseError JavaScript.Error
 
 
 
@@ -162,7 +163,7 @@ serverCreated result model =
                         "Cannot start server."
                         (Just (LogMessage.JavaScriptError b))
             in
-            ( { model | server = Err (JavaScriptError b) }
+            ( { model | server = Err (CreateError b) }
             , logMessage message
                 |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
                 |> Task.attempt (\_ -> NothingHappened)
@@ -258,7 +259,7 @@ serverClosed result model =
                         "Cannot close server."
                         (Just (LogMessage.JavaScriptError b))
             in
-            ( { model | server = Err (JavaScriptError b) }
+            ( { model | server = Err (CloseError b) }
             , logMessage message
                 |> Task.attempt (\_ -> NothingHappened)
             )
