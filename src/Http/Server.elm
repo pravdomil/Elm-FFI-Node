@@ -27,6 +27,8 @@ import JavaScript
 import Json.Decode
 import Json.Encode
 import Task
+import Time
+import Time.Codec
 
 
 {-| <https://nodejs.org/api/http.html#class-httpserver>
@@ -52,7 +54,7 @@ create options =
                   req.on('error', e => { scope.ports.httpServer.send({ $: 1, a: e }) })
                   res.on('error', e => { scope.ports.httpServer.send({ $: 2, a: e }) })
                   c.default().parse(req, (e, fields, files) => {
-                    scope.ports.httpServer.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
+                    scope.ports.httpServer.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files, time: Date.now() } })
                   })
                 })
                 b.listen(a)
@@ -110,7 +112,7 @@ onMsg toMsg =
 
         requestDecoder : Json.Decode.Decoder Request
         requestDecoder =
-            Json.Decode.map6 Request
+            Json.Decode.map7 Request
                 (Json.Decode.map2 RequestResource
                     (Json.Decode.field "req" Json.Decode.value)
                     (Json.Decode.field "res" Json.Decode.value)
@@ -156,6 +158,9 @@ onMsg toMsg =
                             (Json.Decode.list (fileDecoder |> Json.Decode.map FilePart))
                         )
                     )
+                )
+                (Json.Decode.field "time"
+                    (Codec.decoder Time.Codec.posix)
                 )
 
         toMsg_ : Json.Decode.Value -> Msg
@@ -286,6 +291,7 @@ type alias Request =
     , url : String
     , headers : Dict.Dict String (List String)
     , parts : Dict.Dict String (List Part)
+    , time : Time.Posix
     }
 
 
@@ -298,6 +304,7 @@ requestCodec =
         |> Codec.field .url Codec.string
         |> Codec.field .headers (Codec.dict Codec.string (Codec.list Codec.string))
         |> Codec.field .parts (Codec.dict Codec.string (Codec.list partCodec))
+        |> Codec.field .time Time.Codec.posix
         |> Codec.buildRecord
 
 
