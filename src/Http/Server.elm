@@ -51,7 +51,6 @@ create options =
                 b.on('request', (req, res) => {
                   req.on('error', e => { scope.ports.httpServer.send({ $: 1, a: e }) })
                   res.on('error', e => { scope.ports.httpServer.send({ $: 2, a: e }) })
-                  res._created = Date.now()
                   c.default().parse(req, (e, fields, files) => {
                     scope.ports.httpServer.send(e ? { $: 1, a: e } : { $: 3, a: { req, res, fields, files } })
                   })
@@ -402,7 +401,7 @@ respond response request =
         respond_ =
             case request.resource of
                 Just b ->
-                    JavaScript.run "new Promise((resolve, reject) => { a.b.push('Server-Timing', 'Elm;dur=' + (Date.now() - a.res._created)); a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
+                    JavaScript.run "new Promise((resolve, reject) => { a.res.writeHead(a.a, a.b); a.res.end(a.c, b => { b ? reject(b) : resolve() }) })"
                         (Json.Encode.object
                             [ ( "res", (\(RequestResource _ x) -> x) b )
                             , ( "a", response.statusCode |> Json.Encode.int )
