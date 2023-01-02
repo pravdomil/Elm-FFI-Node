@@ -147,6 +147,7 @@ serverCreated result model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Info
+                        "HTTP Server"
                         "Server started."
                         Nothing
             in
@@ -161,6 +162,7 @@ serverCreated result model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Error
+                        "HTTP Server"
                         "Cannot start server."
                         (Just (LogMessage.JavaScriptError b))
             in
@@ -180,6 +182,7 @@ messageReceived msg model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Error
+                        "HTTP Server"
                         "Server error."
                         (Just (LogMessage.JavaScriptError b))
             in
@@ -195,6 +198,7 @@ messageReceived msg model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Warning
+                        "HTTP Server"
                         "Request error."
                         (Just (LogMessage.JavaScriptError b))
             in
@@ -209,6 +213,7 @@ messageReceived msg model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Warning
+                        "HTTP Server"
                         "Response error."
                         (Just (LogMessage.JavaScriptError b))
             in
@@ -251,6 +256,7 @@ serverClosed result model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Info
+                        "HTTP Server"
                         "Server closed."
                         Nothing
             in
@@ -265,6 +271,7 @@ serverClosed result model =
                 message =
                     LogMessage.LogMessage
                         LogMessage.Error
+                        "HTTP Server"
                         "Cannot close server."
                         (Just (LogMessage.JavaScriptError b))
             in
