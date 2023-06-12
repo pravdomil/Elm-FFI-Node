@@ -1,4 +1,4 @@
-module FileSystem exposing (Path, append, chmod, delete, pathToString, read, rename, stringToPath, write)
+module FileSystem exposing (Path, append, chmod, createDirectory, delete, pathToString, read, rename, stringToPath, write)
 
 {-| <https://nodejs.org/api/fs.html>
 -}
