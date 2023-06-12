@@ -88,3 +88,15 @@ delete (Path a) =
         "require('fs/promises').unlink(a)"
         (Json.Encode.string a)
         (Json.Decode.succeed ())
+
+
+
+--
+
+
+createDirectory : Path -> Task.Task JavaScript.Error ()
+createDirectory (Path a) =
+    JavaScript.run
+        "fs.promises.mkdir(a, { recursive: true })"
+        (Json.Encode.string a)
+        (Json.Decode.succeed ())
