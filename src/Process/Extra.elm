@@ -38,3 +38,35 @@ onBeforeExit msg =
         Json.Encode.null
         (Json.Decode.succeed ())
         |> Task.attempt (\_ -> msg)
+
+
+
+--
+
+
+spawn : String -> List String -> Task.Task JavaScript.Error String
+spawn a args =
+    JavaScript.run """
+        new Promise((resolve, reject) => {
+            function err(code, msg) {
+                var e = new Error(msg)
+                e.code = code
+                return e
+            }
+    
+            var b = require('child_process').spawn(a[0], a[1]);
+            var stdout = '';
+            var stderr = '';
+            b.on('error', reject)
+            b.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
+            b.stdout.on('data', b => { stdout += b })
+            b.stderr.on('data', b => { stderr += b })
+            onCancel(() => b.kill())
+        })
+        """
+        (Json.Encode.list identity
+            [ Json.Encode.string a
+            , Json.Encode.list Json.Encode.string args
+            ]
+        )
+        Json.Decode.string
