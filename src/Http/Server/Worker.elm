@@ -61,22 +61,22 @@ type Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg =
     case msg of
         NothingHappened ->
-            Platform.Extra.noOperation model
+            Platform.Extra.noOperation
 
         ServerCreated b ->
-            serverCreated b model
+            serverCreated b
 
         MessageReceived b ->
-            messageReceived b model
+            messageReceived b
 
         CloseRequested ->
-            closeServer model
+            closeServer
 
         ServerClosed b ->
-            serverClosed b model
+            serverClosed b
 
 
 
