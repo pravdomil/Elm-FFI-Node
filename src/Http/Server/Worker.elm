@@ -6,8 +6,6 @@ module Http.Server.Worker exposing (Model, Msg(..), init, update, subscriptions)
 
 -}
 
-import Codec
-import Console
 import Http.Server
 import JavaScript
 import LogMessage
@@ -182,25 +180,7 @@ serverClosed result model =
 log : LogMessage.LogMessage -> Model -> ( Model, Cmd Msg )
 log a model =
     ( model
-    , logMessage a
+    , LogMessage.log a
         |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
         |> Task.attempt (\_ -> NothingHappened)
     )
-
-
-logMessage : LogMessage.LogMessage -> Task.Task JavaScript.Error ()
-logMessage a =
-    let
-        fn : String -> Task.Task JavaScript.Error ()
-        fn =
-            case a.type_ of
-                LogMessage.Info ->
-                    Console.logInfo
-
-                LogMessage.Warning ->
-                    Console.logWarning
-
-                LogMessage.Error ->
-                    Console.logError
-    in
-    fn (Codec.encodeToString 0 LogMessage.codec a)
