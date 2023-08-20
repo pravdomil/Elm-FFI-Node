@@ -127,50 +127,13 @@ messageReceived : Http.Server.Msg -> Model -> ( Model, Cmd Msg )
 messageReceived msg model =
     case msg of
         Http.Server.ServerError b ->
-            let
-                message : LogMessage.LogMessage
-                message =
-                    LogMessage.LogMessage
-                        LogMessage.Error
-                        "HTTP Server"
-                        "Server error."
-                        (Just (LogMessage.JavaScriptError b))
-            in
-            ( model
-            , logMessage message
-                |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
-                |> Task.attempt (\_ -> NothingHappened)
-            )
+            log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Server error." (Just (LogMessage.JavaScriptError b))) model
 
         Http.Server.RequestError b ->
-            let
-                message : LogMessage.LogMessage
-                message =
-                    LogMessage.LogMessage
-                        LogMessage.Warning
-                        "HTTP Server"
-                        "Request error."
-                        (Just (LogMessage.JavaScriptError b))
-            in
-            ( model
-            , logMessage message
-                |> Task.attempt (\_ -> NothingHappened)
-            )
+            log (LogMessage.LogMessage LogMessage.Warning "HTTP Server" "Request error." (Just (LogMessage.JavaScriptError b))) model
 
         Http.Server.ResponseError b ->
-            let
-                message : LogMessage.LogMessage
-                message =
-                    LogMessage.LogMessage
-                        LogMessage.Warning
-                        "HTTP Server"
-                        "Response error."
-                        (Just (LogMessage.JavaScriptError b))
-            in
-            ( model
-            , logMessage message
-                |> Task.attempt (\_ -> NothingHappened)
-            )
+            log (LogMessage.LogMessage LogMessage.Warning "HTTP Server" "Response error." (Just (LogMessage.JavaScriptError b))) model
 
         Http.Server.RequestReceived _ ->
             Platform.Extra.noOperation model
@@ -242,6 +205,15 @@ subscriptions _ =
 
 
 --
+
+
+log : LogMessage.LogMessage -> Model -> ( Model, Cmd Msg )
+log a model =
+    ( model
+    , logMessage a
+        |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
+        |> Task.attempt (\_ -> NothingHappened)
+    )
 
 
 logMessage : LogMessage.LogMessage -> Task.Task JavaScript.Error ()
