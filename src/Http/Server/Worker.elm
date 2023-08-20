@@ -1,16 +1,8 @@
-module Http.Server.Worker exposing
-    ( Worker, close
-    , Msg, init, update, subscriptions
-    , PublicMsg(..), toPublicMsg
-    )
+module Http.Server.Worker exposing (Model, Msg, init, update, subscriptions)
 
 {-|
 
-@docs Worker, close
-
-@docs Msg, init, update, subscriptions
-
-@docs PublicMsg, toPublicMsg
+@docs Model, Msg, init, update, subscriptions
 
 -}
 
@@ -24,19 +16,6 @@ import Process
 import Process.Extra
 import Task
 import Task.Extra
-
-
-type Worker
-    = Worker Model
-
-
-close : Worker -> ( Worker, Cmd Msg )
-close a =
-    update CloseRequested a
-
-
-
---
 
 
 type alias Model =
@@ -60,14 +39,13 @@ type Error
 --
 
 
-init : Http.Server.Options -> ( Worker, Cmd Msg )
+init : Http.Server.Options -> ( Model, Cmd Msg )
 init options =
     ( Model
         (Err NoServer)
     , Cmd.none
     )
         |> Platform.Extra.andThen (createServer options)
-        |> Tuple.mapFirst Worker
 
 
 
@@ -82,9 +60,9 @@ type Msg
     | ServerClosed (Result JavaScript.Error ())
 
 
-update : Msg -> Worker -> ( Worker, Cmd Msg )
-update msg (Worker model) =
-    (case msg of
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
         NothingHappened ->
             Platform.Extra.noOperation model
 
@@ -99,26 +77,6 @@ update msg (Worker model) =
 
         ServerClosed b ->
             serverClosed b model
-    )
-        |> Tuple.mapFirst Worker
-
-
-
---
-
-
-type PublicMsg
-    = RequestReceived Http.Server.Request
-
-
-toPublicMsg : Msg -> Maybe PublicMsg
-toPublicMsg a =
-    case a of
-        MessageReceived (Http.Server.RequestReceived b) ->
-            Just (RequestReceived b)
-
-        _ ->
-            Nothing
 
 
 
@@ -285,7 +243,7 @@ serverClosed result model =
 --
 
 
-subscriptions : Worker -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions _ =
     Http.Server.onMsg MessageReceived
 
