@@ -163,8 +163,8 @@ onMsg toMsg =
                     (Codec.decoder Time.Codec.posix)
                 )
 
-        toMsg_ : Json.Decode.Value -> Msg
-        toMsg_ b =
+        decodeMsg : Json.Decode.Value -> Msg
+        decodeMsg b =
             b
                 |> Json.Decode.decodeValue
                     (Json.Decode.field "$" Json.Decode.int
@@ -206,7 +206,7 @@ onMsg toMsg =
                                 ServerError (JavaScript.DecodeError x2)
                    )
     in
-    httpServer (toMsg_ >> toMsg)
+    httpServer (decodeMsg >> toMsg)
 
 
 
