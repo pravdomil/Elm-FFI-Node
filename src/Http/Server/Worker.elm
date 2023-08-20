@@ -83,6 +83,15 @@ update msg =
 --
 
 
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Http.Server.onMsg MessageReceived
+
+
+
+--
+
+
 createServer : Http.Server.Options -> Model -> ( Model, Cmd Msg )
 createServer options model =
     case model.server of
@@ -164,15 +173,6 @@ serverClosed result model =
             , Cmd.none
             )
                 |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Cannot close server." (Just (LogMessage.JavaScriptError b))) x)
-
-
-
---
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Http.Server.onMsg MessageReceived
 
 
 
