@@ -100,27 +100,17 @@ serverCreated : Result JavaScript.Error Http.Server.Server -> Model -> ( Model, 
 serverCreated result model =
     case result of
         Ok b ->
-            let
-                message : LogMessage.LogMessage
-                message =
-                    LogMessage.LogMessage LogMessage.Info "HTTP Server" "Server started." Nothing
-            in
             ( { model | server = Ok b }
-            , logMessage message
-                |> Task.attempt (\_ -> NothingHappened)
+            , Cmd.none
             )
+                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Info "HTTP Server" "Server started." Nothing) x)
 
         Err b ->
-            let
-                message : LogMessage.LogMessage
-                message =
-                    LogMessage.LogMessage LogMessage.Error "HTTP Server" "Cannot start server." (Just (LogMessage.JavaScriptError b))
-            in
             ( { model | server = Err (CreateError b) }
-            , logMessage message
-                |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
+            , Process.Extra.softExit
                 |> Task.attempt (\_ -> NothingHappened)
             )
+                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Cannot start server." (Just (LogMessage.JavaScriptError b))) x)
 
 
 messageReceived : Http.Server.Msg -> Model -> ( Model, Cmd Msg )
