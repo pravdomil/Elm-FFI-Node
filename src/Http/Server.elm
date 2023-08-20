@@ -61,8 +61,8 @@ create options =
                 return b
               })
             """
-                (options |> encodeOptions)
-                (Json.Decode.value |> Json.Decode.map Server)
+                (encodeOptions options)
+                (Json.Decode.map Server Json.Decode.value)
 
         clearSocket : Task.Task x ()
         clearSocket =
