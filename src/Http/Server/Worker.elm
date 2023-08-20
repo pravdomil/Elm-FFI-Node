@@ -160,19 +160,10 @@ serverClosed result model =
                 |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Info "HTTP Server" "Server closed." Nothing) x)
 
         Err b ->
-            let
-                message : LogMessage.LogMessage
-                message =
-                    LogMessage.LogMessage
-                        LogMessage.Error
-                        "HTTP Server"
-                        "Cannot close server."
-                        (Just (LogMessage.JavaScriptError b))
-            in
             ( { model | server = Err (CloseError b) }
-            , logMessage message
-                |> Task.attempt (\_ -> NothingHappened)
+            , Cmd.none
             )
+                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Cannot close server." (Just (LogMessage.JavaScriptError b))) x)
 
 
 
