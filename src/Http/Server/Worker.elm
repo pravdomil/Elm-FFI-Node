@@ -1,4 +1,4 @@
-module Http.Server.Worker exposing (Model, Msg, init, update, subscriptions)
+module Http.Server.Worker exposing (Model, Msg(..), init, update, subscriptions)
 
 {-|
 
