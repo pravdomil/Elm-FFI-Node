@@ -165,38 +165,38 @@ onMsg toMsg =
 
         decodeMsg : Json.Decode.Value -> Msg
         decodeMsg b =
-            b
-                |> Json.Decode.decodeValue
-                    (Json.Decode.field "$" Json.Decode.int
-                        |> Json.Decode.andThen
-                            (\tag ->
-                                case tag of
-                                    0 ->
-                                        Json.Decode.map ServerError
-                                            (Json.Decode.field "a" Json.Decode.value
-                                                |> Json.Decode.map JavaScript.decodeError
-                                            )
+            Json.Decode.decodeValue
+                (Json.Decode.field "$" Json.Decode.int
+                    |> Json.Decode.andThen
+                        (\tag ->
+                            case tag of
+                                0 ->
+                                    Json.Decode.map ServerError
+                                        (Json.Decode.field "a" Json.Decode.value
+                                            |> Json.Decode.map JavaScript.decodeError
+                                        )
 
-                                    1 ->
-                                        Json.Decode.map RequestError
-                                            (Json.Decode.field "a" Json.Decode.value
-                                                |> Json.Decode.map JavaScript.decodeError
-                                            )
+                                1 ->
+                                    Json.Decode.map RequestError
+                                        (Json.Decode.field "a" Json.Decode.value
+                                            |> Json.Decode.map JavaScript.decodeError
+                                        )
 
-                                    2 ->
-                                        Json.Decode.map ResponseError
-                                            (Json.Decode.field "a" Json.Decode.value
-                                                |> Json.Decode.map JavaScript.decodeError
-                                            )
+                                2 ->
+                                    Json.Decode.map ResponseError
+                                        (Json.Decode.field "a" Json.Decode.value
+                                            |> Json.Decode.map JavaScript.decodeError
+                                        )
 
-                                    3 ->
-                                        Json.Decode.map RequestReceived
-                                            (Json.Decode.field "a" requestDecoder)
+                                3 ->
+                                    Json.Decode.map RequestReceived
+                                        (Json.Decode.field "a" requestDecoder)
 
-                                    _ ->
-                                        Json.Decode.fail "Cannot decode message."
-                            )
-                    )
+                                _ ->
+                                    Json.Decode.fail "Cannot decode message."
+                        )
+                )
+                b
                 |> (\x ->
                         case x of
                             Ok x2 ->
