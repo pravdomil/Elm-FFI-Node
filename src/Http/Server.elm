@@ -130,13 +130,13 @@ onMsg toMsg =
                     fn c acc =
                         case c of
                             first :: second :: rest ->
-                                fn rest (Dict.update (String.toLower first) (\x -> x |> Maybe.withDefault [] |> (::) second |> Just) acc)
+                                fn rest (Dict.update (String.toLower first) (\x -> Just (second :: Maybe.withDefault [] x)) acc)
 
                             _ ->
                                 acc
                  in
                  Json.Decode.at [ "req", "rawHeaders" ] (Json.Decode.list Json.Decode.string)
-                    |> Json.Decode.map (\x -> Dict.empty |> fn x |> Dict.map (always List.reverse))
+                    |> Json.Decode.map (\x -> Dict.map (always List.reverse) (fn x Dict.empty))
                 )
                 (Json.Decode.map2
                     (\fields files ->
