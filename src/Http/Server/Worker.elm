@@ -103,11 +103,7 @@ serverCreated result model =
             let
                 message : LogMessage.LogMessage
                 message =
-                    LogMessage.LogMessage
-                        LogMessage.Info
-                        "HTTP Server"
-                        "Server started."
-                        Nothing
+                    LogMessage.LogMessage LogMessage.Info "HTTP Server" "Server started." Nothing
             in
             ( { model | server = Ok b }
             , logMessage message
@@ -118,11 +114,7 @@ serverCreated result model =
             let
                 message : LogMessage.LogMessage
                 message =
-                    LogMessage.LogMessage
-                        LogMessage.Error
-                        "HTTP Server"
-                        "Cannot start server."
-                        (Just (LogMessage.JavaScriptError b))
+                    LogMessage.LogMessage LogMessage.Error "HTTP Server" "Cannot start server." (Just (LogMessage.JavaScriptError b))
             in
             ( { model | server = Err (CreateError b) }
             , logMessage message
