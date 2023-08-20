@@ -150,12 +150,12 @@ onMsg toMsg =
                     )
                     (Json.Decode.field "fields"
                         (Json.Decode.dict
-                            (Json.Decode.list (Json.Decode.string |> Json.Decode.map StringPart))
+                            (Json.Decode.list (Json.Decode.map StringPart Json.Decode.string))
                         )
                     )
                     (Json.Decode.field "files"
                         (Json.Decode.dict
-                            (Json.Decode.list (fileDecoder |> Json.Decode.map FilePart))
+                            (Json.Decode.list (Json.Decode.map FilePart fileDecoder))
                         )
                     )
                 )
