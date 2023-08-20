@@ -154,19 +154,10 @@ serverClosed : Result JavaScript.Error () -> Model -> ( Model, Cmd Msg )
 serverClosed result model =
     case result of
         Ok () ->
-            let
-                message : LogMessage.LogMessage
-                message =
-                    LogMessage.LogMessage
-                        LogMessage.Info
-                        "HTTP Server"
-                        "Server closed."
-                        Nothing
-            in
             ( { model | server = Err NoServer }
-            , logMessage message
-                |> Task.attempt (\_ -> NothingHappened)
+            , Cmd.none
             )
+                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Info "HTTP Server" "Server closed." Nothing) x)
 
         Err b ->
             let
