@@ -288,7 +288,7 @@ type alias Request =
     { resource : Maybe RequestResource
     , ip : Maybe String
     , method : String
-    , url : String
+    , path : String
     , headers : Dict.Dict String (List String)
     , parts : Dict.Dict String (List Part)
     , time : Time.Posix
@@ -301,7 +301,7 @@ requestCodec =
         |> Codec.field .resource (Codec.succeed Nothing)
         |> Codec.field .ip (Codec.maybe Codec.string)
         |> Codec.field .method Codec.string
-        |> Codec.field .url Codec.string
+        |> Codec.field .path Codec.string
         |> Codec.field .headers (Codec.dict Codec.string (Codec.list Codec.string))
         |> Codec.field .parts (Codec.dict Codec.string (Codec.list partCodec))
         |> Codec.field .time Time.Codec.posix
