@@ -13,7 +13,6 @@ import Platform.Extra
 import Process
 import Process.Extra
 import Task
-import Task.Extra
 
 
 type alias Model =
@@ -125,6 +124,7 @@ messageReceived msg model =
     case msg of
         Http.Server.ServerError b ->
             log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Server error." (Just (LogMessage.JavaScriptError b))) model
+                |> Platform.Extra.andThen (\x -> ( x, Task.attempt (\_ -> NothingHappened) Process.Extra.softExit ))
 
         Http.Server.RequestError b ->
             log (LogMessage.LogMessage LogMessage.Warning "HTTP Server" "Request error." (Just (LogMessage.JavaScriptError b))) model
@@ -181,6 +181,5 @@ log : LogMessage.LogMessage -> Model -> ( Model, Cmd Msg )
 log a model =
     ( model
     , LogMessage.log a
-        |> Task.Extra.andAlwaysThen (\_ -> Process.Extra.softExit)
         |> Task.attempt (\_ -> NothingHappened)
     )
