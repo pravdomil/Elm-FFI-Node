@@ -1,7 +1,6 @@
 {
   "name": "elm-ffi-node",
   "devDependencies": {
-    "elm-codec": "github:pravdomil/elm-codec",
     "elm-data": "github:pravdomil/elm-data",
     "elm-ffi": "github:pravdomil/elm-ffi",
     "elm-utils": "github:pravdomil/elm-utils"
