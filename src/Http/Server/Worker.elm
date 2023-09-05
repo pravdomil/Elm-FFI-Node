@@ -109,28 +109,28 @@ serverCreated result model =
             ( { model | server = Ok b }
             , Cmd.none
             )
-                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Info "HTTP Server" "Server started." Nothing) x)
+                |> Platform.Extra.andThen (\x -> log (LogMessage.Info [ "HTTP Server", "Server started." ]) x)
 
         Err b ->
             ( { model | server = Err (CreateError b) }
             , Process.Extra.softExit
                 |> Task.attempt (\_ -> NothingHappened)
             )
-                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Cannot start server." (Just (LogMessage.JavaScriptError b))) x)
+                |> Platform.Extra.andThen (\x -> log (LogMessage.Error [ "HTTP Server", "Cannot start server.", LogMessage.encodeJavaScriptError b ]) x)
 
 
 messageReceived : Http.Server.Msg -> Model -> ( Model, Cmd Msg )
 messageReceived msg model =
     case msg of
         Http.Server.ServerError b ->
-            log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Server error." (Just (LogMessage.JavaScriptError b))) model
+            log (LogMessage.Error [ "HTTP Server", "Server error.", LogMessage.encodeJavaScriptError b ]) model
                 |> Platform.Extra.andThen (\x -> ( x, Task.attempt (\_ -> NothingHappened) Process.Extra.softExit ))
 
         Http.Server.RequestError b ->
-            log (LogMessage.LogMessage LogMessage.Warning "HTTP Server" "Request error." (Just (LogMessage.JavaScriptError b))) model
+            log (LogMessage.Warning [ "HTTP Server", "Request error.", LogMessage.encodeJavaScriptError b ]) model
 
         Http.Server.ResponseError b ->
-            log (LogMessage.LogMessage LogMessage.Warning "HTTP Server" "Response error." (Just (LogMessage.JavaScriptError b))) model
+            log (LogMessage.Warning [ "HTTP Server", "Response error.", LogMessage.encodeJavaScriptError b ]) model
 
         Http.Server.RequestReceived _ ->
             Platform.Extra.noOperation model
@@ -164,13 +164,13 @@ serverClosed result model =
             ( { model | server = Err NoServer }
             , Cmd.none
             )
-                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Info "HTTP Server" "Server closed." Nothing) x)
+                |> Platform.Extra.andThen (\x -> log (LogMessage.Info [ "HTTP Server", "Server closed." ]) x)
 
         Err b ->
             ( { model | server = Err (CloseError b) }
             , Cmd.none
             )
-                |> Platform.Extra.andThen (\x -> log (LogMessage.LogMessage LogMessage.Error "HTTP Server" "Cannot close server." (Just (LogMessage.JavaScriptError b))) x)
+                |> Platform.Extra.andThen (\x -> log (LogMessage.Error [ "HTTP Server", "Cannot close server.", LogMessage.encodeJavaScriptError b ]) x)
 
 
 
