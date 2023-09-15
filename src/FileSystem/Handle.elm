@@ -32,7 +32,7 @@ open mode a =
             , ( "mode", Json.Encode.int (modeToInt mode) )
             ]
         )
-        (Json.Decode.value |> Json.Decode.map Handle)
+        (Json.Decode.map Handle Json.Decode.value)
 
 
 read : Handle -> Task.Task JavaScript.Error String
