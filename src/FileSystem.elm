@@ -97,6 +97,6 @@ delete (Path a) =
 createDirectory : Path -> Task.Task JavaScript.Error ()
 createDirectory (Path a) =
     JavaScript.run
-        "fs.promises.mkdir(a, { recursive: true })"
+        "require('fs/promises').mkdir(a, { recursive: true })"
         (Json.Encode.string a)
         (Json.Decode.succeed ())
